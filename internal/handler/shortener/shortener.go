@@ -46,6 +46,11 @@ func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleGet(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Incorrect request method", http.StatusBadRequest)
+		return
+	}
+
 	id := r.PathValue("id")
 
 	redirect, err := h.Storage.Get(id)
