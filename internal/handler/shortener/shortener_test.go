@@ -107,6 +107,7 @@ func TestHandler_HandleGet(t *testing.T) {
 			w := httptest.NewRecorder()
 			h.HandleGet(w, r)
 			res := w.Result()
+			res.Body.Close()
 
 			assert.Equal(t, tt.response.status, res.StatusCode)
 			assert.Equal(t, tt.response.body, w.Body.String())
@@ -200,6 +201,7 @@ func TestHandler_HandlePost(t *testing.T) {
 			w := httptest.NewRecorder()
 			h.HandlePost(w, r)
 			res := w.Result()
+			res.Body.Close()
 
 			assert.Equal(t, tt.response.status, res.StatusCode)
 			if tt.response.body != "" {
