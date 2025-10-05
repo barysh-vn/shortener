@@ -32,7 +32,7 @@ func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
 	if key == "" {
 		key = h.Random.Random(8)
 		err = h.Storage.Set(key, string(body))
-		if err != nil && !errors.Is(err, repository.ExistsError) {
+		if err != nil && !errors.Is(err, repository.ErrExistsError) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

@@ -21,7 +21,7 @@ func (l Storage) Set(key string, value string) error {
 
 	_, ok := l.Values[key]
 	if ok {
-		return repository.ExistsError
+		return repository.ErrExistsError
 	}
 
 	l.Values[key] = value
@@ -31,7 +31,7 @@ func (l Storage) Set(key string, value string) error {
 func (l Storage) Get(key string) (string, error) {
 	v, ok := l.Values[key]
 	if !ok {
-		return "", repository.NotFoundError
+		return "", repository.ErrNotFoundError
 	}
 
 	return v, nil
@@ -44,5 +44,5 @@ func (l Storage) GetKeyByValue(value string) (string, error) {
 		}
 	}
 
-	return "", repository.NotFoundError
+	return "", repository.ErrNotFoundError
 }
