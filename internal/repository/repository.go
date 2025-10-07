@@ -7,8 +7,8 @@ var (
 	ErrExistsError   = errors.New("already exists")
 )
 
-type Storage interface {
-	Set(key, value string) error
+type LinkRepository interface {
+	Set(key string, value string) error
 	Get(key string) (string, error)
 	GetKeyByValue(value string) (string, error)
 }

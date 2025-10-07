@@ -7,6 +7,10 @@ import (
 
 type Randomizer struct{}
 
+func NewAlphabetRandomizer() *Randomizer {
+	return &Randomizer{}
+}
+
 func (r Randomizer) Random(length int) string {
 	alphabet := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 	alphabetLen := len(alphabet)

@@ -1,4 +1,4 @@
-package local
+package memory
 
 import (
 	"errors"
@@ -6,11 +6,17 @@ import (
 	"github.com/barysh-vn/shortener/internal/repository"
 )
 
-type Storage struct {
+type Repository struct {
 	Values map[string]string
 }
 
-func (l Storage) Set(key string, value string) error {
+func NewMemoryRepository() *Repository {
+	return &Repository{
+		Values: make(map[string]string),
+	}
+}
+
+func (s Repository) Set(key string, value string) error {
 	if len(key) == 0 {
 		return errors.New("empty key")
 	}
@@ -19,17 +25,17 @@ func (l Storage) Set(key string, value string) error {
 		return errors.New("empty value")
 	}
 
-	_, ok := l.Values[key]
+	_, ok := s.Values[key]
 	if ok {
 		return repository.ErrExistsError
 	}
 
-	l.Values[key] = value
+	s.Values[key] = value
 	return nil
 }
 
-func (l Storage) Get(key string) (string, error) {
-	v, ok := l.Values[key]
+func (s Repository) Get(key string) (string, error) {
+	v, ok := s.Values[key]
 	if !ok {
 		return "", repository.ErrNotFoundError
 	}
@@ -37,8 +43,8 @@ func (l Storage) Get(key string) (string, error) {
 	return v, nil
 }
 
-func (l Storage) GetKeyByValue(value string) (string, error) {
-	for k, v := range l.Values {
+func (s Repository) GetKeyByValue(value string) (string, error) {
+	for k, v := range s.Values {
 		if v == value {
 			return k, nil
 		}
