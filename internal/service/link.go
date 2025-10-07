@@ -31,7 +31,7 @@ func (s *LinkService) GetLinkByAlias(alias string) (model.Link, error) {
 	}, nil
 }
 
-func (s *LinkService) GetLinkByUrl(url string) (model.Link, error) {
+func (s *LinkService) GetLinkByURL(url string) (model.Link, error) {
 	alias, err := s.Storage.GetKeyByValue(url)
 	if err != nil {
 		return model.Link{}, err

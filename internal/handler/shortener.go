@@ -40,7 +40,7 @@ func (h *LinkHandler) HandlePost(c *gin.Context) {
 	}
 
 	url := string(body)
-	link, err := h.LinkService.GetLinkByUrl(url)
+	link, err := h.LinkService.GetLinkByURL(url)
 	if err != nil && errors.Is(err, repository.ErrNotFoundError) {
 		link = model.Link{Url: url, Alias: h.RandomService.GetRandomString(8)}
 		err = h.LinkService.Add(link)

@@ -115,7 +115,7 @@ func TestLinkService_GetLinkByAlias(t *testing.T) {
 	}
 }
 
-func TestLinkService_GetLinkByUrl(t *testing.T) {
+func TestLinkService_GetLinkByURL(t *testing.T) {
 	type fields struct {
 		Storage repository.LinkRepository
 	}
@@ -168,13 +168,13 @@ func TestLinkService_GetLinkByUrl(t *testing.T) {
 			s := &LinkService{
 				Storage: tt.fields.Storage,
 			}
-			got, err := s.GetLinkByUrl(tt.args.url)
+			got, err := s.GetLinkByURL(tt.args.url)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetLinkByUrl() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetLinkByURL() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetLinkByUrl() got = %v, want %v", got, tt.want)
+				t.Errorf("GetLinkByURL() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
