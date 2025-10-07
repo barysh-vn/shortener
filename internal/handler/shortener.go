@@ -29,7 +29,7 @@ func (h *LinkHandler) HandleGet(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusTemporaryRedirect, link.Url)
+	c.Redirect(http.StatusTemporaryRedirect, link.URL)
 }
 
 func (h *LinkHandler) HandlePost(c *gin.Context) {
@@ -42,7 +42,7 @@ func (h *LinkHandler) HandlePost(c *gin.Context) {
 	url := string(body)
 	link, err := h.LinkService.GetLinkByURL(url)
 	if err != nil && errors.Is(err, repository.ErrNotFoundError) {
-		link = model.Link{Url: url, Alias: h.RandomService.GetRandomString(8)}
+		link = model.Link{URL: url, Alias: h.RandomService.GetRandomString(8)}
 		err = h.LinkService.Add(link)
 		if err != nil && !errors.Is(err, repository.ErrExistsError) {
 			c.String(http.StatusBadRequest, err.Error())

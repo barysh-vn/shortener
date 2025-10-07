@@ -16,7 +16,7 @@ func NewLinkService(storage repository.LinkRepository) *LinkService {
 }
 
 func (s *LinkService) Add(link model.Link) error {
-	return s.Storage.Set(link.Alias, link.Url)
+	return s.Storage.Set(link.Alias, link.URL)
 }
 
 func (s *LinkService) GetLinkByAlias(alias string) (model.Link, error) {
@@ -26,7 +26,7 @@ func (s *LinkService) GetLinkByAlias(alias string) (model.Link, error) {
 	}
 
 	return model.Link{
-		Url:   url,
+		URL:   url,
 		Alias: alias,
 	}, nil
 }
@@ -38,7 +38,7 @@ func (s *LinkService) GetLinkByURL(url string) (model.Link, error) {
 	}
 
 	return model.Link{
-		Url:   url,
+		URL:   url,
 		Alias: alias,
 	}, nil
 }

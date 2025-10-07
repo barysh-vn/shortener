@@ -31,7 +31,7 @@ func TestLinkService_Add(t *testing.T) {
 			},
 			args: args{
 				link: model.Link{
-					Url:   "http://example.com",
+					URL:   "http://example.com",
 					Alias: "example",
 				},
 			},
@@ -78,7 +78,7 @@ func TestLinkService_GetLinkByAlias(t *testing.T) {
 			},
 			want: model.Link{
 				Alias: "example",
-				Url:   "http://example.com",
+				URL:   "http://example.com",
 			},
 			wantErr: false,
 		},
@@ -143,7 +143,7 @@ func TestLinkService_GetLinkByURL(t *testing.T) {
 			},
 			want: model.Link{
 				Alias: "example",
-				Url:   "http://example.com",
+				URL:   "http://example.com",
 			},
 			wantErr: false,
 		},
