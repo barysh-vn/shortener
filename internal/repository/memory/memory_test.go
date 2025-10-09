@@ -3,6 +3,8 @@ package memory
 import (
 	"reflect"
 	"testing"
+
+	"github.com/barysh-vn/shortener/internal/model"
 )
 
 func TestNewMemoryRepository(t *testing.T) {
@@ -69,12 +71,12 @@ func TestRepository_Get(t *testing.T) {
 			s := Repository{
 				Values: tt.fields.Values,
 			}
-			got, err := s.Get(tt.args.key)
+			got, err := s.GetByAlias(tt.args.key)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
+			if got.URL != tt.want {
 				t.Errorf("Get() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -126,12 +128,12 @@ func TestRepository_GetKeyByValue(t *testing.T) {
 			s := Repository{
 				Values: tt.fields.Values,
 			}
-			got, err := s.GetKeyByValue(tt.args.value)
+			got, err := s.GetByURL(tt.args.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetKeyByValue() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
+			if got.Alias != tt.want {
 				t.Errorf("GetKeyByValue() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -204,7 +206,7 @@ func TestRepository_Set(t *testing.T) {
 			s := Repository{
 				Values: tt.fields.Values,
 			}
-			if err := s.Set(tt.args.key, tt.args.value); (err != nil) != tt.wantErr {
+			if err := s.Add(model.Link{Alias: tt.args.key, URL: tt.args.value}); (err != nil) != tt.wantErr {
 				t.Errorf("Set() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

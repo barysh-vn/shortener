@@ -1,6 +1,10 @@
 package repository
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/barysh-vn/shortener/internal/model"
+)
 
 var (
 	ErrNotFoundError = errors.New("not found")
@@ -8,7 +12,7 @@ var (
 )
 
 type LinkRepository interface {
-	Set(key string, value string) error
-	Get(key string) (string, error)
-	GetKeyByValue(value string) (string, error)
+	Add(link model.Link) error
+	GetByAlias(alias string) (model.Link, error)
+	GetByURL(url string) (model.Link, error)
 }

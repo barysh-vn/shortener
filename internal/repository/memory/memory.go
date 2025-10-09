@@ -3,6 +3,7 @@ package memory
 import (
 	"errors"
 
+	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/repository"
 )
 
@@ -16,39 +17,39 @@ func NewMemoryRepository() *Repository {
 	}
 }
 
-func (s Repository) Set(key string, value string) error {
-	if len(key) == 0 {
-		return errors.New("empty key")
+func (s Repository) Add(link model.Link) error {
+	if len(link.URL) == 0 {
+		return errors.New("empty URL")
 	}
 
-	if len(value) == 0 {
-		return errors.New("empty value")
+	if len(link.Alias) == 0 {
+		return errors.New("empty alias")
 	}
 
-	_, ok := s.Values[key]
+	_, ok := s.Values[link.Alias]
 	if ok {
 		return repository.ErrExistsError
 	}
 
-	s.Values[key] = value
+	s.Values[link.Alias] = link.URL
 	return nil
 }
 
-func (s Repository) Get(key string) (string, error) {
-	v, ok := s.Values[key]
+func (s Repository) GetByAlias(alias string) (model.Link, error) {
+	v, ok := s.Values[alias]
 	if !ok {
-		return "", repository.ErrNotFoundError
+		return model.Link{}, repository.ErrNotFoundError
 	}
 
-	return v, nil
+	return model.Link{URL: v, Alias: alias}, nil
 }
 
-func (s Repository) GetKeyByValue(value string) (string, error) {
+func (s Repository) GetByURL(url string) (model.Link, error) {
 	for k, v := range s.Values {
-		if v == value {
-			return k, nil
+		if v == url {
+			return model.Link{URL: url, Alias: k}, nil
 		}
 	}
 
-	return "", repository.ErrNotFoundError
+	return model.Link{}, repository.ErrNotFoundError
 }

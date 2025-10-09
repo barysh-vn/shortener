@@ -16,29 +16,23 @@ func NewLinkService(storage repository.LinkRepository) *LinkService {
 }
 
 func (s *LinkService) Add(link model.Link) error {
-	return s.Storage.Set(link.Alias, link.URL)
+	return s.Storage.Add(link)
 }
 
 func (s *LinkService) GetLinkByAlias(alias string) (model.Link, error) {
-	url, err := s.Storage.Get(alias)
+	link, err := s.Storage.GetByAlias(alias)
 	if err != nil {
 		return model.Link{}, err
 	}
 
-	return model.Link{
-		URL:   url,
-		Alias: alias,
-	}, nil
+	return link, nil
 }
 
 func (s *LinkService) GetLinkByURL(url string) (model.Link, error) {
-	alias, err := s.Storage.GetKeyByValue(url)
+	link, err := s.Storage.GetByURL(url)
 	if err != nil {
 		return model.Link{}, err
 	}
 
-	return model.Link{
-		URL:   url,
-		Alias: alias,
-	}, nil
+	return link, nil
 }
