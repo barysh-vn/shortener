@@ -14,6 +14,7 @@ import (
 type LinkHandler struct {
 	LinkService   *service.LinkService
 	RandomService *service.RandomService
+	URL           string
 }
 
 func (h *LinkHandler) HandleGet(c *gin.Context) {
@@ -50,6 +51,6 @@ func (h *LinkHandler) HandlePost(c *gin.Context) {
 		}
 	}
 
-	resp := "http://localhost:8080/" + link.Alias
+	resp := h.URL + link.Alias
 	c.String(http.StatusCreated, resp)
 }

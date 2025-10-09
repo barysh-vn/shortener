@@ -43,6 +43,7 @@ func TestLinkHandler_HandleGet(t *testing.T) {
 				RandomService: &service.RandomService{
 					Randomizer: alphabet.NewAlphabetRandomizer(),
 				},
+				URL: "http://localhost:8080/",
 			},
 			request: request{
 				method: http.MethodGet,
@@ -67,6 +68,7 @@ func TestLinkHandler_HandleGet(t *testing.T) {
 				RandomService: &service.RandomService{
 					Randomizer: alphabet.NewAlphabetRandomizer(),
 				},
+				URL: "http://localhost:8080/",
 			},
 			request: request{
 				method: http.MethodGet,
@@ -95,6 +97,7 @@ func TestLinkHandler_HandleGet(t *testing.T) {
 				RandomService: &service.RandomService{
 					Randomizer: alphabet.NewAlphabetRandomizer(),
 				},
+				URL: "http://localhost:8080/",
 			},
 			request: request{
 				method: http.MethodGet,
@@ -162,6 +165,7 @@ func TestLinkHandler_HandlePost(t *testing.T) {
 				RandomService: &service.RandomService{
 					Randomizer: alphabet.NewAlphabetRandomizer(),
 				},
+				URL: "http://localhost:8080/",
 			},
 			request: request{
 				method: http.MethodPost,
@@ -186,6 +190,7 @@ func TestLinkHandler_HandlePost(t *testing.T) {
 				RandomService: &service.RandomService{
 					Randomizer: alphabet.NewAlphabetRandomizer(),
 				},
+				URL: "http://localhost:8080/",
 			},
 			request: request{
 				method: http.MethodPost,
@@ -209,6 +214,7 @@ func TestLinkHandler_HandlePost(t *testing.T) {
 				RandomService: &service.RandomService{
 					Randomizer: alphabet.NewAlphabetRandomizer(),
 				},
+				URL: "http://localhost:8080/",
 			},
 			request: request{
 				method: http.MethodPost,

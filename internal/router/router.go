@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/barysh-vn/shortener/internal/app"
+	"github.com/barysh-vn/shortener/internal/config"
 	"github.com/barysh-vn/shortener/internal/handler"
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +12,7 @@ func NewRouter() *gin.Engine {
 	linkHandler := handler.LinkHandler{
 		LinkService:   app.GetLinkService(),
 		RandomService: app.GetRandomService(),
+		URL:           config.GetShortenerConfig().URL,
 	}
 
 	r.GET("/:id", linkHandler.HandleGet)
