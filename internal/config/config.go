@@ -9,7 +9,7 @@ import (
 
 type ShortenerConfig struct {
 	Address ShortenerAddress
-	URL     string
+	BaseURL string
 }
 
 type ShortenerAddress struct {
@@ -24,7 +24,7 @@ func (c *ShortenerAddress) String() string {
 func (c *ShortenerAddress) Set(value string) error {
 	values := strings.Split(value, ":")
 	if len(values) != 2 {
-		return fmt.Errorf("invalid shortener URL: %s", value)
+		return fmt.Errorf("invalid shortener BaseURL: %s", value)
 	}
 
 	port, err := strconv.Atoi(values[1])
@@ -42,18 +42,18 @@ var (
 		Host: "localhost",
 		Port: 8080,
 	}
-	ResultURL string
+	ShortenerBaseURL string
 )
 
 func ParseFlags() {
 	flag.Var(ShortenerAddressConfig, "a", "Shortener address (host:port)")
-	flag.StringVar(&ResultURL, "b", "http://"+ShortenerAddressConfig.String()+"/", "Shortener result URL")
+	flag.StringVar(&ShortenerBaseURL, "b", "http://"+ShortenerAddressConfig.String(), "Shortener result BaseURL")
 	flag.Parse()
 }
 
 func GetShortenerConfig() *ShortenerConfig {
 	return &ShortenerConfig{
 		Address: *ShortenerAddressConfig,
-		URL:     ResultURL,
+		BaseURL: strings.Trim(ShortenerBaseURL, "/"),
 	}
 }

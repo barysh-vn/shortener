@@ -12,7 +12,7 @@ func NewRouter() *gin.Engine {
 	linkHandler := handler.LinkHandler{
 		LinkService:   app.GetLinkService(),
 		RandomService: app.GetRandomService(),
-		URL:           config.GetShortenerConfig().URL,
+		URL:           config.GetShortenerConfig().BaseURL,
 	}
 
 	r.GET("/:id", linkHandler.HandleGet)

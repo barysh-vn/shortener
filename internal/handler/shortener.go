@@ -51,6 +51,6 @@ func (h *LinkHandler) HandlePost(c *gin.Context) {
 		}
 	}
 
-	resp := h.URL + link.Alias
+	resp := h.URL + "/" + link.Alias
 	c.String(http.StatusCreated, resp)
 }
