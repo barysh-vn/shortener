@@ -19,20 +19,20 @@ func (s *LinkService) Add(link model.Link) error {
 	return s.Storage.Add(link)
 }
 
-func (s *LinkService) GetLinkByAlias(alias string) (model.Link, error) {
+func (s *LinkService) GetLinkByAlias(alias string) (*model.Link, error) {
 	link, err := s.Storage.GetByAlias(alias)
 	if err != nil {
-		return model.Link{}, err
+		return &model.Link{}, err
 	}
 
-	return link, nil
+	return &link, nil
 }
 
-func (s *LinkService) GetLinkByURL(url string) (model.Link, error) {
+func (s *LinkService) GetLinkByURL(url string) (*model.Link, error) {
 	link, err := s.Storage.GetByURL(url)
 	if err != nil {
-		return model.Link{}, err
+		return &model.Link{}, err
 	}
 
-	return link, nil
+	return &link, nil
 }

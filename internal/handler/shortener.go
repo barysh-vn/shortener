@@ -20,13 +20,13 @@ type LinkHandler struct {
 func (h *LinkHandler) HandleGet(c *gin.Context) {
 	alias := c.Param("id")
 	if alias == "" {
-		c.String(http.StatusBadRequest, "id is required")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
 		return
 	}
 
 	link, err := h.LinkService.GetLinkByAlias(alias)
 	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -36,17 +36,17 @@ func (h *LinkHandler) HandleGet(c *gin.Context) {
 func (h *LinkHandler) HandlePost(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil || len(body) == 0 {
-		c.String(http.StatusBadRequest, "Incorrect request body")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect request body"})
 		return
 	}
 
 	url := string(body)
 	link, err := h.LinkService.GetLinkByURL(url)
 	if err != nil && errors.Is(err, repository.ErrNotFoundError) {
-		link = model.Link{URL: url, Alias: h.RandomService.GetRandomString(8)}
-		err = h.LinkService.Add(link)
+		link = &model.Link{URL: url, Alias: h.RandomService.GetRandomString(8)}
+		err = h.LinkService.Add(*link)
 		if err != nil && !errors.Is(err, repository.ErrExistsError) {
-			c.String(http.StatusBadRequest, err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 	}

@@ -51,8 +51,8 @@ func TestLinkHandler_HandleGet(t *testing.T) {
 			},
 			response: response{
 				status:      http.StatusBadRequest,
-				body:        "id is required",
-				contentType: "text/plain; charset=utf-8",
+				body:        `{"error":"id is required"}`,
+				contentType: "application/json; charset=utf-8",
 			},
 		},
 		{
@@ -108,8 +108,8 @@ func TestLinkHandler_HandleGet(t *testing.T) {
 			},
 			response: response{
 				status:      http.StatusBadRequest,
-				body:        "not found",
-				contentType: "text/plain; charset=utf-8",
+				body:        `{"error":"not found"}`,
+				contentType: "application/json; charset=utf-8",
 			},
 		},
 	}
@@ -222,8 +222,8 @@ func TestLinkHandler_HandlePost(t *testing.T) {
 			},
 			response: response{
 				status:      http.StatusBadRequest,
-				body:        "Incorrect request body",
-				contentType: "text/plain; charset=utf-8",
+				body:        `{"error":"Incorrect request body"}`,
+				contentType: "application/json; charset=utf-8",
 			},
 		},
 	}

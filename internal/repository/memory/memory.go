@@ -1,8 +1,6 @@
 package memory
 
 import (
-	"errors"
-
 	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/repository"
 )
@@ -19,11 +17,11 @@ func NewMemoryRepository() *Repository {
 
 func (s Repository) Add(link model.Link) error {
 	if len(link.URL) == 0 {
-		return errors.New("empty URL")
+		return repository.ErrInvalidDataError
 	}
 
 	if len(link.Alias) == 0 {
-		return errors.New("empty alias")
+		return repository.ErrInvalidDataError
 	}
 
 	_, ok := s.Values[link.Alias]

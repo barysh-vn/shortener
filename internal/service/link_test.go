@@ -61,7 +61,7 @@ func TestLinkService_GetLinkByAlias(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    model.Link
+		want    *model.Link
 		wantErr bool
 	}{
 		{
@@ -76,7 +76,7 @@ func TestLinkService_GetLinkByAlias(t *testing.T) {
 			args: args{
 				alias: "example",
 			},
-			want: model.Link{
+			want: &model.Link{
 				Alias: "example",
 				URL:   "http://example.com",
 			},
@@ -94,7 +94,7 @@ func TestLinkService_GetLinkByAlias(t *testing.T) {
 			args: args{
 				alias: "foo",
 			},
-			want:    model.Link{},
+			want:    &model.Link{},
 			wantErr: true,
 		},
 	}
@@ -126,7 +126,7 @@ func TestLinkService_GetLinkByURL(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    model.Link
+		want    *model.Link
 		wantErr bool
 	}{
 		{
@@ -141,7 +141,7 @@ func TestLinkService_GetLinkByURL(t *testing.T) {
 			args: args{
 				url: "http://example.com",
 			},
-			want: model.Link{
+			want: &model.Link{
 				Alias: "example",
 				URL:   "http://example.com",
 			},
@@ -159,7 +159,7 @@ func TestLinkService_GetLinkByURL(t *testing.T) {
 			args: args{
 				url: "https://practicum.yandex.ru",
 			},
-			want:    model.Link{},
+			want:    &model.Link{},
 			wantErr: true,
 		},
 	}

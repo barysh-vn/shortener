@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/barysh-vn/shortener/internal/config"
 	"github.com/barysh-vn/shortener/internal/router"
 )
@@ -10,6 +12,6 @@ func main() {
 	r := router.NewRouter()
 	err := r.Run(config.GetShortenerConfig().Address.String())
 	if err != nil {
-		panic(err)
+		log.Printf("run time error: %v", err)
 	}
 }
