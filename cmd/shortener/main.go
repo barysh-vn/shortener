@@ -5,8 +5,16 @@ import (
 	"log"
 
 	"github.com/barysh-vn/shortener/internal/config"
+	"github.com/barysh-vn/shortener/internal/logger"
 	"github.com/barysh-vn/shortener/internal/router"
 )
+
+func init() {
+	err := logger.Initialize("INFO")
+	if err != nil {
+		log.Printf("log init error: %v", err)
+	}
+}
 
 func main() {
 	config.DeclareShortenerConfig()
