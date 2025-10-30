@@ -51,7 +51,7 @@ func (h *LinkHandler) HandlePost(c *gin.Context) {
 	c.String(http.StatusCreated, h.getURL(link))
 }
 
-func (h *LinkHandler) HandleApiShorten(c *gin.Context) {
+func (h *LinkHandler) HandleAPIShorten(c *gin.Context) {
 	body, err := h.getBody(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -65,7 +65,7 @@ func (h *LinkHandler) HandleApiShorten(c *gin.Context) {
 		return
 	}
 
-	link, err := h.getLink(request.Url)
+	link, err := h.getLink(request.URL)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -79,7 +79,7 @@ func (h *LinkHandler) HandleApiShorten(c *gin.Context) {
 func (h *LinkHandler) getBody(c *gin.Context) ([]byte, error) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil || len(body) == 0 {
-		return []byte(""), errors.New("Incorrect request body")
+		return []byte(""), errors.New("incorrect request body")
 	}
 
 	return body, nil

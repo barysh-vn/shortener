@@ -23,7 +23,7 @@ func NewRouter(config *model.ShortenerConfig) *gin.Engine {
 	r.POST("/", linkHandler.HandlePost)
 
 	apiGroup := r.Group("/api")
-	apiGroup.POST("/shorten", linkHandler.HandleApiShorten)
+	apiGroup.POST("/shorten", linkHandler.HandleAPIShorten)
 
 	return r
 }

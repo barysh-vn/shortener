@@ -224,7 +224,7 @@ func TestLinkHandler_HandlePost(t *testing.T) {
 			},
 			response: response{
 				status:      http.StatusBadRequest,
-				body:        `{"error":"Incorrect request body"}`,
+				body:        `{"error":"incorrect request body"}`,
 				contentType: "application/json; charset=utf-8",
 			},
 		},
