@@ -18,6 +18,7 @@ func NewRouter(config *model.ShortenerConfig) *gin.Engine {
 	}
 
 	r.Use(middleware.RequestLoggerMiddleware(logger.BaseLogger))
+	r.Use(middleware.GzipMiddleware())
 
 	r.GET("/:id", linkHandler.HandleGet)
 	r.POST("/", linkHandler.HandlePost)
