@@ -20,5 +20,9 @@ func (l *Loader) Load(config *model.ShortenerConfig) error {
 		config.BaseURL = baseURL
 	}
 
+	if filePath := os.Getenv("FILE_STORAGE_PATH"); filePath != "" {
+		config.FilePath = filePath
+	}
+
 	return nil
 }

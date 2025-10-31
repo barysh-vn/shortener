@@ -12,7 +12,8 @@ var (
 			Host: "localhost",
 			Port: 8080,
 		},
-		BaseURL: "http://localhost:8080",
+		BaseURL:  "http://localhost:8080",
+		FilePath: "./db.json",
 	}
 )
 

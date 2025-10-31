@@ -15,6 +15,7 @@ func TestDeclareAndGetShortenerConfig(t *testing.T) {
 	type envArgs struct {
 		ServerAddr string
 		BaseURL    string
+		FilePath   string
 	}
 
 	type flagArgs []string
@@ -32,7 +33,8 @@ func TestDeclareAndGetShortenerConfig(t *testing.T) {
 					Host: "localhost",
 					Port: 8080,
 				},
-				BaseURL: "http://localhost:8080",
+				BaseURL:  "http://localhost:8080",
+				FilePath: "db.json",
 			},
 			env:   envArgs{},
 			flags: flagArgs{},
@@ -44,11 +46,13 @@ func TestDeclareAndGetShortenerConfig(t *testing.T) {
 					Host: "localhost",
 					Port: 8181,
 				},
-				BaseURL: "http://localhost:8282",
+				BaseURL:  "http://localhost:8282",
+				FilePath: "./flag_file.json",
 			},
 			env: envArgs{
 				ServerAddr: "localhost:8181",
 				BaseURL:    "http://localhost:8282",
+				FilePath:   "./flag_file.json",
 			},
 			flags: flagArgs{},
 		},
@@ -59,10 +63,11 @@ func TestDeclareAndGetShortenerConfig(t *testing.T) {
 					Host: "localhost",
 					Port: 8181,
 				},
-				BaseURL: "http://localhost:8282",
+				BaseURL:  "http://localhost:8282",
+				FilePath: "./env_file.json",
 			},
 			env:   envArgs{},
-			flags: flagArgs{"-a", "localhost:8181", "-b", "http://localhost:8282"},
+			flags: flagArgs{"-a", "localhost:8181", "-b", "http://localhost:8282", "-f", "./env_file.json"},
 		},
 		{
 			name: "Test get shortener config (from different loaders)",
@@ -71,7 +76,8 @@ func TestDeclareAndGetShortenerConfig(t *testing.T) {
 					Host: "localhost",
 					Port: 8383,
 				},
-				BaseURL: "http://localhost:8282",
+				BaseURL:  "http://localhost:8282",
+				FilePath: "db.json",
 			},
 			env: envArgs{
 				ServerAddr: "localhost:8383",
@@ -83,6 +89,7 @@ func TestDeclareAndGetShortenerConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			os.Setenv("SERVER_ADDRESS", tt.env.ServerAddr)
 			os.Setenv("BASE_URL", tt.env.BaseURL)
+			os.Setenv("FILE_STORAGE_PATH", tt.env.FilePath)
 			fs := goflag.NewFlagSet("test", goflag.ContinueOnError)
 
 			oldCommandLine := goflag.CommandLine

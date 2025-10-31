@@ -1,6 +1,7 @@
 package model
 
 type ShortenerConfig struct {
-	Address *ShortenerAddress
-	BaseURL string
+	Address  *ShortenerAddress
+	BaseURL  string
+	FilePath string
 }

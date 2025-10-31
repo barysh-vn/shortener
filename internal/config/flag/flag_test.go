@@ -14,6 +14,7 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 		args     []string
 		wantAddr string
 		wantBase string
+		wantFile string
 		wantErr  bool
 	}{
 		{
@@ -22,14 +23,16 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 			args:     []string{},
 			wantAddr: "localhost:8080",
 			wantBase: "http://localhost:8080",
+			wantFile: "db.json",
 			wantErr:  false,
 		},
 		{
 			name:     "Test flag loader correct (custom values)",
 			initAddr: &model.ShortenerAddress{Host: "localhost", Port: 8080},
-			args:     []string{"-a", "localhost:9090", "-b", "http://localhost:8181"},
+			args:     []string{"-a", "localhost:9090", "-b", "http://localhost:8181", "-f", "db_custom.json"},
 			wantAddr: "localhost:9090",
 			wantBase: "http://localhost:8181",
+			wantFile: "db_custom.json",
 			wantErr:  false,
 		},
 		{
@@ -38,6 +41,7 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 			args:     []string{"-a", "10.0.0.1:3000"},
 			wantAddr: "10.0.0.1:3000",
 			wantBase: "http://localhost:8080",
+			wantFile: "db.json",
 			wantErr:  false,
 		},
 		{
@@ -46,6 +50,7 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 			args:     []string{"-a", "invalid"},
 			wantAddr: "localhost:8080",
 			wantBase: "http://localhost:8080",
+			wantFile: "db.json",
 			wantErr:  true,
 		},
 		{
@@ -54,6 +59,7 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 			args:     []string{"-a", ""},
 			wantAddr: "localhost:8080",
 			wantBase: "http://localhost:8080",
+			wantFile: "db.json",
 			wantErr:  true,
 		},
 	}
@@ -61,8 +67,9 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &model.ShortenerConfig{
-				Address: tt.initAddr,
-				BaseURL: "",
+				Address:  tt.initAddr,
+				BaseURL:  "",
+				FilePath: "",
 			}
 			loader := &Loader{}
 
@@ -84,6 +91,9 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 			}
 			if got := cfg.BaseURL; got != tt.wantBase {
 				t.Errorf("BaseURL = %q, want %q", got, tt.wantBase)
+			}
+			if got := cfg.FilePath; got != tt.wantFile {
+				t.Errorf("FilePath = %q, want %q", got, tt.wantFile)
 			}
 		})
 	}

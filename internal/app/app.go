@@ -1,7 +1,9 @@
 package app
 
 import (
+	"github.com/barysh-vn/shortener/internal/config"
 	"github.com/barysh-vn/shortener/internal/random/alphabet"
+	"github.com/barysh-vn/shortener/internal/repository/file"
 	"github.com/barysh-vn/shortener/internal/repository/memory"
 	"github.com/barysh-vn/shortener/internal/service"
 )
@@ -14,7 +16,8 @@ func GetRandomService() *service.RandomService {
 }
 
 var memoryRepository = memory.NewMemoryRepository()
-var linkService = service.NewLinkService(memoryRepository)
+var fileRepository = file.NewFileRepository(config.GetShortenerConfig().FilePath)
+var linkService = service.NewLinkService(fileRepository)
 
 func GetLinkService() *service.LinkService {
 	return linkService

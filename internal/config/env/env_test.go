@@ -10,9 +10,10 @@ import (
 
 func TestLoader_Load(t *testing.T) {
 	type args struct {
-		config  *model.ShortenerConfig
-		address string
-		baseURL string
+		config   *model.ShortenerConfig
+		address  string
+		baseURL  string
+		filePath string
 	}
 	tests := []struct {
 		name    string
@@ -27,10 +28,12 @@ func TestLoader_Load(t *testing.T) {
 						Host: "localhost",
 						Port: 8080,
 					},
-					BaseURL: "http://localhost:8080",
+					BaseURL:  "http://localhost:8080",
+					FilePath: "db.json",
 				},
-				address: "localhost:8080",
-				baseURL: "http://localhost:8080",
+				address:  "localhost:8080",
+				baseURL:  "http://localhost:8080",
+				filePath: "db.json",
 			},
 			wantErr: false,
 		},
@@ -59,6 +62,7 @@ func TestLoader_Load(t *testing.T) {
 			}
 			os.Setenv("SERVER_ADDRESS", tt.args.address)
 			os.Setenv("BASE_URL", tt.args.baseURL)
+			os.Setenv("FILE_STORAGE_PATH", tt.args.filePath)
 			if err := l.Load(config); (err != nil) != tt.wantErr {
 				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)
 				return
