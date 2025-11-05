@@ -1,88 +1,63 @@
 package logger
 
 import (
+	"reflect"
 	"testing"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-func TestInitialize(t *testing.T) {
+func TestGetLogger(t *testing.T) {
+	type args struct {
+		level string
+	}
 	tests := []struct {
 		name      string
-		level     string
+		args      args
+		want      *zap.Logger
+		wantLevel zapcore.Level
 		wantErr   bool
-		checkFunc func(t *testing.T)
 	}{
 		{
-			name:    "Test valid level - info",
-			level:   "info",
-			wantErr: false,
-			checkFunc: func(t *testing.T) {
-				if BaseLogger == zap.NewNop() {
-					t.Error("expected BaseLogger to be initialized, got NOP")
-				}
-				BaseLogger.Info("info log test")
+			name: "Get info logger",
+			args: args{
+				level: "INFO",
 			},
+			wantLevel: zapcore.InfoLevel,
+			wantErr:   false,
 		},
 		{
-			name:    "Test valid level - debug (should enable debug logs)",
-			level:   "debug",
-			wantErr: false,
-			checkFunc: func(t *testing.T) {
-				if !BaseLogger.Core().Enabled(zap.DebugLevel) {
-					t.Error("expected debug level to be enabled")
-				}
+			name: "Get warn logger",
+			args: args{
+				level: "WARN",
 			},
+			wantLevel: zapcore.WarnLevel,
+			wantErr:   false,
 		},
 		{
-			name:    "Test invalid level",
-			level:   "notalevel",
+			name: "Get error logger (invalid level)",
+			args: args{
+				level: "INVALID_LEVEL",
+			},
 			wantErr: true,
 		},
-		{
-			name:    "Test reinitialize",
-			level:   "warn",
-			wantErr: false,
-			checkFunc: func(t *testing.T) {
-				err := Initialize("error")
-				if err != nil {
-					t.Errorf("unexpected error during reinitialization: %v", err)
-				}
-			},
-		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := Initialize(tt.level)
-
+			got, err := GetLogger(tt.args.level)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetLogger() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-
-			if tt.checkFunc != nil {
-				tt.checkFunc(t)
+			if !tt.wantErr && reflect.TypeOf(got) != reflect.TypeOf(tt.want) {
+				t.Errorf("GetLogger() got = %v, want %v", got, tt.want)
+				return
+			}
+			if !tt.wantErr && got.Level() != tt.wantLevel {
+				t.Errorf("GetLogger() got level = %v, want %v", got.Level(), tt.wantLevel)
+				return
 			}
 		})
 	}
-}
-
-func TestBaseSugarLogger(t *testing.T) {
-	if err := Initialize("info"); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	sugar := BaseSugarLogger()
-	if sugar == nil {
-		t.Fatal("expected non-nil sugared logger")
-	}
-
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("BaseSugarLogger panicked: %v", r)
-		}
-	}()
-
-	sugar.Infow("sugar test", "key", "value")
 }

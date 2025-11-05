@@ -9,18 +9,18 @@ import (
 type Loader struct{}
 
 func (l *Loader) Load(config *model.ShortenerConfig) error {
-	if address := os.Getenv("SERVER_ADDRESS"); address != "" {
+	if address, ok := os.LookupEnv("SERVER_ADDRESS"); ok {
 		err := config.Address.Set(address)
 		if err != nil {
 			return err
 		}
 	}
 
-	if baseURL := os.Getenv("BASE_URL"); baseURL != "" {
+	if baseURL, ok := os.LookupEnv("BASE_URL"); ok {
 		config.BaseURL = baseURL
 	}
 
-	if filePath := os.Getenv("FILE_STORAGE_PATH"); filePath != "" {
+	if filePath, ok := os.LookupEnv("FILE_STORAGE_PATH"); ok {
 		config.FilePath = filePath
 	}
 

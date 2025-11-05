@@ -106,7 +106,8 @@ func TestRequestLoggerMiddleware_Constructor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := RequestLoggerMiddleware(logger.BaseLogger); reflect.TypeOf(got) != reflect.TypeOf(tt.want) {
+			zapLogger, _ := logger.GetLogger("INFO")
+			if got := RequestLoggerMiddleware(zapLogger); reflect.TypeOf(got) != reflect.TypeOf(tt.want) {
 				t.Errorf("RequestLoggerMiddleware() = %v, want %v", got, tt.want)
 			}
 		})

@@ -3,9 +3,7 @@ package file
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
-	"runtime/debug"
 
 	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/repository"
@@ -16,7 +14,6 @@ type Repository struct {
 }
 
 func NewFileRepository(fp string) *Repository {
-	fmt.Println(string(debug.Stack()))
 	if _, err := os.Stat(fp); errors.Is(err, os.ErrNotExist) {
 		_ = os.WriteFile(fp, []byte("[]"), 0644)
 	}

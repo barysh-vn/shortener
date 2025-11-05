@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/model/api"
@@ -103,5 +104,9 @@ func (h *LinkHandler) getLink(url string) (*model.Link, error) {
 }
 
 func (h *LinkHandler) getURL(link *model.Link) string {
-	return h.URL + "/" + link.Alias
+	result, err := url.JoinPath(h.URL, link.Alias)
+	if err != nil {
+		return ""
+	}
+	return result
 }

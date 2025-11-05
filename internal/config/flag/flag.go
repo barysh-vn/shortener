@@ -6,6 +6,10 @@ import (
 	"github.com/barysh-vn/shortener/internal/model"
 )
 
+type Declarer interface {
+	Declare(config *model.ShortenerConfig)
+}
+
 type Loader struct {
 	address *model.ShortenerAddress
 }

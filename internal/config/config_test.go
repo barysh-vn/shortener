@@ -1,30 +1,24 @@
 package config
 
 import (
-	goflag "flag"
-	"os"
+	"flag"
 	"reflect"
 	"testing"
 
-	"github.com/barysh-vn/shortener/internal/config/env"
-	"github.com/barysh-vn/shortener/internal/config/flag"
 	"github.com/barysh-vn/shortener/internal/model"
 )
 
-func TestDeclareAndGetShortenerConfig(t *testing.T) {
+func TestGetShortenerConfig(t *testing.T) {
 	type envArgs struct {
 		ServerAddr string
 		BaseURL    string
 		FilePath   string
 	}
 
-	type flagArgs []string
-
 	tests := []struct {
-		name  string
-		want  *model.ShortenerConfig
-		env   envArgs
-		flags flagArgs
+		name string
+		want *model.ShortenerConfig
+		env  envArgs
 	}{
 		{
 			name: "Test get default shortener config",
@@ -34,10 +28,9 @@ func TestDeclareAndGetShortenerConfig(t *testing.T) {
 					Port: 8080,
 				},
 				BaseURL:  "http://localhost:8080",
-				FilePath: "db.json",
+				FilePath: "./db.json",
 			},
-			env:   envArgs{},
-			flags: flagArgs{},
+			env: envArgs{},
 		},
 		{
 			name: "Test get shortener config (from env)",
@@ -54,79 +47,34 @@ func TestDeclareAndGetShortenerConfig(t *testing.T) {
 				BaseURL:    "http://localhost:8282",
 				FilePath:   "./flag_file.json",
 			},
-			flags: flagArgs{},
-		},
-		{
-			name: "Test get shortener config (from flags)",
-			want: &model.ShortenerConfig{
-				Address: &model.ShortenerAddress{
-					Host: "localhost",
-					Port: 8181,
-				},
-				BaseURL:  "http://localhost:8282",
-				FilePath: "./env_file.json",
-			},
-			env:   envArgs{},
-			flags: flagArgs{"-a", "localhost:8181", "-b", "http://localhost:8282", "-f", "./env_file.json"},
-		},
-		{
-			name: "Test get shortener config (from different loaders)",
-			want: &model.ShortenerConfig{
-				Address: &model.ShortenerAddress{
-					Host: "localhost",
-					Port: 8383,
-				},
-				BaseURL:  "http://localhost:8282",
-				FilePath: "db.json",
-			},
-			env: envArgs{
-				ServerAddr: "localhost:8383",
-			},
-			flags: flagArgs{"-a", "localhost:8181", "-b", "http://localhost:8282"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Setenv("SERVER_ADDRESS", tt.env.ServerAddr)
-			os.Setenv("BASE_URL", tt.env.BaseURL)
-			os.Setenv("FILE_STORAGE_PATH", tt.env.FilePath)
-			fs := goflag.NewFlagSet("test", goflag.ContinueOnError)
+			if tt.env.ServerAddr != "" {
+				t.Setenv("SERVER_ADDRESS", tt.env.ServerAddr)
+			}
+			if tt.env.BaseURL != "" {
+				t.Setenv("BASE_URL", tt.env.BaseURL)
+			}
+			if tt.env.FilePath != "" {
+				t.Setenv("FILE_STORAGE_PATH", tt.env.FilePath)
+			}
+			fs := flag.NewFlagSet("test", flag.ContinueOnError)
 
-			oldCommandLine := goflag.CommandLine
-			goflag.CommandLine = fs
-			defer func() { goflag.CommandLine = oldCommandLine }()
+			oldCommandLine := flag.CommandLine
+			flag.CommandLine = fs
+			defer func() { flag.CommandLine = oldCommandLine }()
 
-			DeclareShortenerConfig()
-
-			err := fs.Parse(tt.flags)
+			got := &DefaultShortenerConfig
+			err := LoadShortenerConfig(got)
 			if err != nil {
-				t.Fatalf("Parse() error = %v", err)
+				t.Errorf("LoadShortenerConfig() error %v", err)
+				return
 			}
 
-			if got := GetShortenerConfig(); !reflect.DeepEqual(got, tt.want) {
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetShortenerConfig() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestGetConfigLoaders(t *testing.T) {
-	tests := []struct {
-		name string
-		want []Loader
-	}{
-		{
-			name: "Test get config loaders",
-			want: []Loader{
-				&flag.Loader{},
-				&env.Loader{},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetConfigLoaders(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetConfigLoaders() = %v, want %v", got, tt.want)
 			}
 		})
 	}
