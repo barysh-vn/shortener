@@ -1,6 +1,8 @@
 package router
 
 import (
+	"database/sql"
+
 	"github.com/barysh-vn/shortener/internal/handler"
 	"github.com/barysh-vn/shortener/internal/middleware"
 	"github.com/barysh-vn/shortener/internal/model"
@@ -11,17 +13,19 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewRouter(config *model.ShortenerConfig, logger *zap.Logger) *gin.Engine {
+func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *gin.Engine {
 	r := gin.Default()
 	linkHandler := handler.LinkHandler{
 		LinkService:   service.NewLinkService(file.NewFileRepository(config.FilePath)),
 		RandomService: service.NewRandomService(alphabet.NewAlphabetRandomizer()),
 		URL:           config.BaseURL,
+		DB:            db,
 	}
 
 	r.Use(middleware.RequestLoggerMiddleware(logger))
 	r.Use(middleware.GzipMiddleware())
 
+	r.GET("/ping", linkHandler.HandlePingDB)
 	r.GET("/:id", linkHandler.HandleGet)
 	r.POST("/", linkHandler.HandlePost)
 

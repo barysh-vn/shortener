@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/model/api"
@@ -18,6 +21,7 @@ type LinkHandler struct {
 	LinkService   *service.LinkService
 	RandomService *service.RandomService
 	URL           string
+	DB            *sql.DB
 }
 
 func (h *LinkHandler) HandleGet(c *gin.Context) {
@@ -75,6 +79,17 @@ func (h *LinkHandler) HandleAPIShorten(c *gin.Context) {
 	c.JSON(http.StatusCreated, api.ShortenResponse{
 		Result: h.getURL(link),
 	})
+}
+
+func (h *LinkHandler) HandlePingDB(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	if err := h.DB.PingContext(ctx); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
 func (h *LinkHandler) getBody(c *gin.Context) ([]byte, error) {

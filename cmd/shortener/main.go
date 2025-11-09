@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	goflag "flag"
 
 	"github.com/barysh-vn/shortener/internal/config"
@@ -8,6 +9,8 @@ import (
 	"github.com/barysh-vn/shortener/internal/logger"
 	"github.com/barysh-vn/shortener/internal/router"
 	"go.uber.org/zap"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
@@ -23,7 +26,12 @@ func main() {
 	if err != nil {
 		zap.L().Fatal("logger init error", zap.Error(err))
 	}
-	r := router.NewRouter(shortenerConfig, zapLogger)
+	db, err := sql.Open("pgx", shortenerConfig.DbDSN)
+	if err != nil {
+		zap.L().Fatal("db open error", zap.Error(err))
+	}
+	defer db.Close()
+	r := router.NewRouter(shortenerConfig, zapLogger, db)
 	err = r.Run(shortenerConfig.Address.String())
 	if err != nil {
 		zap.L().Fatal("run time error", zap.Error(err))

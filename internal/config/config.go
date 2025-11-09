@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/barysh-vn/shortener/internal/config/env"
 	"github.com/barysh-vn/shortener/internal/model"
 )
@@ -13,6 +15,7 @@ var (
 		},
 		BaseURL:  "http://localhost:8080",
 		FilePath: "./db.json",
+		DbDSN:    fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `shortener`),
 	}
 )
 

@@ -24,5 +24,9 @@ func (l *Loader) Load(config *model.ShortenerConfig) error {
 		config.FilePath = filePath
 	}
 
+	if dbDSN, ok := os.LookupEnv("DATABASE_DSN"); ok {
+		config.DbDSN = dbDSN
+	}
+
 	return nil
 }
