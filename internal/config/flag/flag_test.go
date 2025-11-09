@@ -20,14 +20,12 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 		wantErr         bool
 	}{
 		{
-			name:            "Test flag loader correct (default values)",
-			initAddr:        &model.ShortenerAddress{Host: "localhost", Port: 8080},
-			args:            []string{},
-			wantAddr:        "localhost:8080",
-			wantBase:        "http://localhost:8080",
-			wantFile:        "db.json",
-			wantDataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `shortener`),
-			wantErr:         false,
+			name:     "Test flag loader correct (default values)",
+			initAddr: &model.ShortenerAddress{Host: "localhost", Port: 8080},
+			args:     []string{},
+			wantAddr: "localhost:8080",
+			wantBase: "http://localhost:8080",
+			wantErr:  false,
 		},
 		{
 			name:            "Test flag loader correct (custom values)",
@@ -40,14 +38,12 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 			wantErr:         false,
 		},
 		{
-			name:            "Test flag loader correct (custom address)",
-			initAddr:        &model.ShortenerAddress{Host: "localhost", Port: 8080},
-			args:            []string{"-a", "10.0.0.1:3000"},
-			wantAddr:        "10.0.0.1:3000",
-			wantBase:        "http://localhost:8080",
-			wantFile:        "db.json",
-			wantDataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `shortener`),
-			wantErr:         false,
+			name:     "Test flag loader correct (custom address)",
+			initAddr: &model.ShortenerAddress{Host: "localhost", Port: 8080},
+			args:     []string{"-a", "10.0.0.1:3000"},
+			wantAddr: "10.0.0.1:3000",
+			wantBase: "http://localhost:8080",
+			wantErr:  false,
 		},
 		{
 			name:     "Test flag loader incorrect (missing address port)",

@@ -71,7 +71,7 @@ func TestRepository_Get(t *testing.T) {
 			s := Repository{
 				Values: tt.fields.Values,
 			}
-			got, err := s.GetByAlias(tt.args.key)
+			got, err := s.GetByAlias(t.Context(), tt.args.key)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -128,7 +128,7 @@ func TestRepository_GetKeyByValue(t *testing.T) {
 			s := Repository{
 				Values: tt.fields.Values,
 			}
-			got, err := s.GetByURL(tt.args.value)
+			got, err := s.GetByURL(t.Context(), tt.args.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetKeyByValue() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -206,7 +206,7 @@ func TestRepository_Set(t *testing.T) {
 			s := Repository{
 				Values: tt.fields.Values,
 			}
-			if err := s.Add(model.Link{Alias: tt.args.key, URL: tt.args.value}); (err != nil) != tt.wantErr {
+			if err := s.Add(t.Context(), model.Link{Alias: tt.args.key, URL: tt.args.value}); (err != nil) != tt.wantErr {
 				t.Errorf("Set() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

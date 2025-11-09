@@ -7,7 +7,10 @@ import (
 	"github.com/barysh-vn/shortener/internal/middleware"
 	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/random/alphabet"
+	"github.com/barysh-vn/shortener/internal/repository"
+	"github.com/barysh-vn/shortener/internal/repository/db/postgres"
 	"github.com/barysh-vn/shortener/internal/repository/file"
+	"github.com/barysh-vn/shortener/internal/repository/memory"
 	"github.com/barysh-vn/shortener/internal/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -15,8 +18,15 @@ import (
 
 func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *gin.Engine {
 	r := gin.Default()
+	var repo repository.LinkRepository
+	repo = memory.NewMemoryRepository()
+	if config.DataBaseDSN != "" {
+		repo = postgres.NewPostgresRepository(db)
+	} else if config.FilePath != "" {
+		repo = file.NewFileRepository(config.FilePath)
+	}
 	linkHandler := handler.LinkHandler{
-		LinkService:   service.NewLinkService(file.NewFileRepository(config.FilePath)),
+		LinkService:   service.NewLinkService(repo),
 		RandomService: service.NewRandomService(alphabet.NewAlphabetRandomizer()),
 		URL:           config.BaseURL,
 		DB:            db,

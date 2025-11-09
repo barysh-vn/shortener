@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/repository"
 )
@@ -16,11 +18,11 @@ func NewLinkService(storage repository.LinkRepository) *LinkService {
 }
 
 func (s *LinkService) Add(link model.Link) error {
-	return s.Storage.Add(link)
+	return s.Storage.Add(context.Background(), link)
 }
 
 func (s *LinkService) GetLinkByAlias(alias string) (*model.Link, error) {
-	link, err := s.Storage.GetByAlias(alias)
+	link, err := s.Storage.GetByAlias(context.Background(), alias)
 	if err != nil {
 		return &model.Link{}, err
 	}
@@ -29,7 +31,7 @@ func (s *LinkService) GetLinkByAlias(alias string) (*model.Link, error) {
 }
 
 func (s *LinkService) GetLinkByURL(url string) (*model.Link, error) {
-	link, err := s.Storage.GetByURL(url)
+	link, err := s.Storage.GetByURL(context.Background(), url)
 	if err != nil {
 		return &model.Link{}, err
 	}

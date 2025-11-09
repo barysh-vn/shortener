@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"errors"
 
 	"github.com/barysh-vn/shortener/internal/model"
@@ -13,7 +14,7 @@ var (
 )
 
 type LinkRepository interface {
-	Add(link model.Link) error
-	GetByAlias(alias string) (model.Link, error)
-	GetByURL(url string) (model.Link, error)
+	Add(ctx context.Context, link model.Link) error
+	GetByAlias(ctx context.Context, alias string) (model.Link, error)
+	GetByURL(ctx context.Context, url string) (model.Link, error)
 }

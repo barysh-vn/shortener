@@ -66,12 +66,12 @@ func TestRepository_Add(t *testing.T) {
 
 			repo := NewFileRepository(fp)
 
-			if err := repo.Add(tt.input); (err != nil) != tt.wantErr {
+			if err := repo.Add(t.Context(), tt.input); (err != nil) != tt.wantErr {
 				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			if !tt.wantErr {
-				links, _ := repo.GetByAlias(tt.input.Alias)
+				links, _ := repo.GetByAlias(t.Context(), tt.input.Alias)
 				if links.URL != tt.input.URL {
 					t.Errorf("Add() url = %v, want %v", tt.input.URL, links.URL)
 				}
@@ -114,7 +114,7 @@ func TestRepository_GetByAlias(t *testing.T) {
 
 			repo := NewFileRepository(fp)
 
-			got, err := repo.GetByAlias(tt.inputAlias)
+			got, err := repo.GetByAlias(t.Context(), tt.inputAlias)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("GetByAlias() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -160,7 +160,7 @@ func TestRepository_GetByURL(t *testing.T) {
 
 			repo := NewFileRepository(fp)
 
-			got, err := repo.GetByURL(tt.inputURL)
+			got, err := repo.GetByURL(t.Context(), tt.inputURL)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("GetByURL() error = %v, wantErr %v", err, tt.wantErr)
 			}
