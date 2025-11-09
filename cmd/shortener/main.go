@@ -1,17 +1,31 @@
 package main
 
 import (
-	"log"
+	goflag "flag"
 
 	"github.com/barysh-vn/shortener/internal/config"
+	"github.com/barysh-vn/shortener/internal/config/flag"
+	"github.com/barysh-vn/shortener/internal/logger"
 	"github.com/barysh-vn/shortener/internal/router"
+	"go.uber.org/zap"
 )
 
 func main() {
-	config.ParseFlags()
-	r := router.NewRouter()
-	err := r.Run(config.GetShortenerConfig().Address.String())
+	shortenerConfig := &config.DefaultShortenerConfig
+	flagLoader := flag.Loader{}
+	flagLoader.Declare(shortenerConfig)
+	goflag.Parse()
+	err := config.LoadShortenerConfig(shortenerConfig)
 	if err != nil {
-		log.Printf("run time error: %v", err)
+		zap.L().Fatal("config load error", zap.Error(err))
+	}
+	zapLogger, err := logger.GetLogger("INFO")
+	if err != nil {
+		zap.L().Fatal("logger init error", zap.Error(err))
+	}
+	r := router.NewRouter(shortenerConfig, zapLogger)
+	err = r.Run(shortenerConfig.Address.String())
+	if err != nil {
+		zap.L().Fatal("run time error", zap.Error(err))
 	}
 }

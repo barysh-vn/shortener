@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/barysh-vn/shortener/internal/logger"
+	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,7 +21,15 @@ func TestNewRouter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewRouter(); reflect.TypeOf(got) != reflect.TypeOf(tt.want) {
+			config := &model.ShortenerConfig{
+				Address: &model.ShortenerAddress{
+					Host: "localhost",
+					Port: 8080,
+				},
+				BaseURL: "http://localhost:8080",
+			}
+			zapLogger, _ := logger.GetLogger("INFO")
+			if got := NewRouter(config, zapLogger); reflect.TypeOf(got) != reflect.TypeOf(tt.want) {
 				t.Errorf("Type of NewRouter() = %v, want %v", reflect.TypeOf(got), reflect.TypeOf(tt.want))
 			}
 		})
