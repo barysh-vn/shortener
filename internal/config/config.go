@@ -13,9 +13,9 @@ var (
 			Host: "localhost",
 			Port: 8080,
 		},
-		BaseURL:  "http://localhost:8080",
-		FilePath: "./db.json",
-		DbDSN:    fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `shortener`),
+		BaseURL:     "http://localhost:8080",
+		FilePath:    "./db.json",
+		DataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `shortener`),
 	}
 )
 

@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		zap.L().Fatal("logger init error", zap.Error(err))
 	}
-	db, err := sql.Open("pgx", shortenerConfig.DbDSN)
+	db, err := sql.Open("pgx", shortenerConfig.DataBaseDSN)
 	if err != nil {
 		zap.L().Fatal("db open error", zap.Error(err))
 	}

@@ -30,10 +30,10 @@ func TestNewRouter(t *testing.T) {
 					Host: "localhost",
 					Port: 8080,
 				},
-				BaseURL: "http://localhost:8080",
-				DbDSN:   fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `shortener`),
+				BaseURL:     "http://localhost:8080",
+				DataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `shortener`),
 			}
-			db, _ := sql.Open("pgx", config.DbDSN)
+			db, _ := sql.Open("pgx", config.DataBaseDSN)
 			defer db.Close()
 			zapLogger, _ := logger.GetLogger("INFO")
 			if got := NewRouter(config, zapLogger, db); reflect.TypeOf(got) != reflect.TypeOf(tt.want) {

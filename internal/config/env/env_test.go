@@ -11,11 +11,11 @@ import (
 
 func TestLoader_Load(t *testing.T) {
 	type args struct {
-		config   *model.ShortenerConfig
-		address  string
-		baseURL  string
-		filePath string
-		dbDSN    string
+		config      *model.ShortenerConfig
+		address     string
+		baseURL     string
+		filePath    string
+		dataBaseDSN string
 	}
 	tests := []struct {
 		name    string
@@ -30,14 +30,14 @@ func TestLoader_Load(t *testing.T) {
 						Host: "localhost",
 						Port: 8080,
 					},
-					BaseURL:  "http://localhost:8080",
-					FilePath: "db.json",
-					DbDSN:    fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
+					BaseURL:     "http://localhost:8080",
+					FilePath:    "db.json",
+					DataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
 				},
-				address:  "localhost:8080",
-				baseURL:  "http://localhost:8080",
-				filePath: "db.json",
-				dbDSN:    fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
+				address:     "localhost:8080",
+				baseURL:     "http://localhost:8080",
+				filePath:    "db.json",
+				dataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
 			},
 			wantErr: false,
 		},
@@ -67,7 +67,7 @@ func TestLoader_Load(t *testing.T) {
 			os.Setenv("SERVER_ADDRESS", tt.args.address)
 			os.Setenv("BASE_URL", tt.args.baseURL)
 			os.Setenv("FILE_STORAGE_PATH", tt.args.filePath)
-			os.Setenv("DATABASE_DSN", tt.args.dbDSN)
+			os.Setenv("DATABASE_DSN", tt.args.dataBaseDSN)
 			if err := l.Load(config); (err != nil) != tt.wantErr {
 				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)
 				return
