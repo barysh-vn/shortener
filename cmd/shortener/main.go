@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	goflag "flag"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -52,8 +53,24 @@ func main() {
 }
 
 func installMigrations(db *sql.DB) error {
-	wd, _ := os.Getwd()
-	migrationsPath := filepath.Join(wd, "../../migrations")
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	migrationsPath := ""
+	for i := 0; i < 5; i++ {
+		candidate := filepath.Join(wd, "migrations")
+		if _, err := os.Stat(candidate); err == nil {
+			migrationsPath = candidate
+			break
+		}
+		wd = filepath.Dir(wd)
+	}
+
+	if migrationsPath == "" {
+		return fmt.Errorf("migrations directory not found")
+	}
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
