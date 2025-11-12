@@ -36,13 +36,10 @@ func main() {
 	defer db.Close()
 
 	if shortenerConfig.DataBaseDSN != "" {
-		driver, _ := postgres.WithInstance(db, &postgres.Config{})
-		m, _ := migrate.NewWithDatabaseInstance(
-			"file://../../migrations",
-			"postgres",
-			driver,
-		)
-		m.Up()
+		err = installMigrations(db)
+		if err != nil {
+			zap.L().Fatal("db migration error", zap.Error(err))
+		}
 	}
 
 	r := router.NewRouter(shortenerConfig, zapLogger, db)
@@ -50,4 +47,22 @@ func main() {
 	if err != nil {
 		zap.L().Fatal("run time error", zap.Error(err))
 	}
+}
+
+func installMigrations(db *sql.DB) error {
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		return err
+	}
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://../../migrations",
+		"postgres",
+		driver,
+	)
+	if err != nil {
+		return err
+	}
+	m.Up()
+
+	return nil
 }
