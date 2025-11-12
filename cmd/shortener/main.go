@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	goflag "flag"
+	"os"
+	"path/filepath"
 
 	"github.com/barysh-vn/shortener/internal/config"
 	"github.com/barysh-vn/shortener/internal/config/flag"
@@ -50,12 +52,15 @@ func main() {
 }
 
 func installMigrations(db *sql.DB) error {
+	wd, _ := os.Getwd()
+	migrationsPath := filepath.Join(wd, "../../migrations")
+
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		return err
 	}
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://../../migrations",
+		"file://"+migrationsPath,
 		"postgres",
 		driver,
 	)
