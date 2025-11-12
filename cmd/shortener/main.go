@@ -31,14 +31,14 @@ func main() {
 	}
 	db, err := sql.Open("pgx", shortenerConfig.DataBaseDSN)
 	if err != nil {
-		zap.L().Fatal("db open error", zap.Error(err))
+		zapLogger.Error("db open error", zap.Error(err))
 	}
 	defer db.Close()
 
 	if shortenerConfig.DataBaseDSN != "" {
 		err = installMigrations(db)
 		if err != nil {
-			zap.L().Fatal("db migration error", zap.Error(err))
+			zapLogger.Error("db migration error", zap.Error(err))
 		}
 	}
 
@@ -62,7 +62,10 @@ func installMigrations(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	m.Up()
+	err = m.Up()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
