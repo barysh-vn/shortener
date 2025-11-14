@@ -49,6 +49,10 @@ func (h *LinkHandler) HandlePost(c *gin.Context) {
 
 	link, err := h.getLink(c, string(body))
 	if err != nil {
+		if errors.Is(err, repository.ErrExistsError) {
+			c.String(http.StatusConflict, h.getURL(link))
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -72,6 +76,12 @@ func (h *LinkHandler) HandleAPIShorten(c *gin.Context) {
 
 	link, err := h.getLink(c, request.URL)
 	if err != nil {
+		if errors.Is(err, repository.ErrExistsError) {
+			c.JSON(http.StatusConflict, api.ShortenResponse{
+				Result: h.getURL(link),
+			})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -120,7 +130,7 @@ func (h *LinkHandler) HandleBatchAPIShorten(c *gin.Context) {
 	}
 
 	if len(newLinks) > 0 {
-		if err := h.LinkService.AddBatch(c, h.DB, newLinks); err != nil {
+		if err = h.LinkService.AddBatch(c, h.DB, newLinks); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -173,9 +183,11 @@ func (h *LinkHandler) getLink(ctx context.Context, url string) (*model.Link, err
 		} else {
 			return link, err
 		}
+	} else {
+		err = repository.ErrExistsError
 	}
 
-	return link, nil
+	return link, err
 }
 
 func (h *LinkHandler) getURL(link *model.Link) string {

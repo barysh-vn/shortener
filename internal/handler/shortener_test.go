@@ -200,7 +200,7 @@ func TestLinkHandler_HandlePost(t *testing.T) {
 				body:   "https://practicum.yandex.ru",
 			},
 			response: response{
-				status:      http.StatusCreated,
+				status:      http.StatusConflict,
 				body:        "http://localhost:8080/foo",
 				contentType: "text/plain; charset=utf-8",
 			},
@@ -360,7 +360,7 @@ func TestLinkHandler_getLink(t *testing.T) {
 				Alias: "fooBar",
 				URL:   "https://practicum.yandex.ru",
 			},
-			wantErr: assert.NoError,
+			wantErr: assert.Error,
 		},
 		{
 			name: "Test get link incorrect (empty url)",
