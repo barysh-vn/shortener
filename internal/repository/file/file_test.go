@@ -171,3 +171,59 @@ func TestRepository_GetByURL(t *testing.T) {
 		})
 	}
 }
+
+func TestRepository_AddWithTx(t *testing.T) {
+	tests := []struct {
+		name        string
+		initialData []model.Link
+		input       model.Link
+		wantErr     bool
+	}{
+		{
+			name:        "Test add with tx link (correct)",
+			initialData: []model.Link{},
+			input:       model.Link{URL: "https://practicum.yandex.ru/", Alias: "alias"},
+			wantErr:     false,
+		},
+		{
+			name: "Test add with tx link (duplicate)",
+			initialData: []model.Link{
+				{URL: "https://practicum.yandex.ru/", Alias: "alias1"},
+			},
+			input:   model.Link{URL: "https://practicum.yandex.ru/", Alias: "alias2"},
+			wantErr: true,
+		},
+		{
+			name:        "Test add with tx link (empty alias)",
+			initialData: []model.Link{},
+			input:       model.Link{URL: "https://test.com", Alias: ""},
+			wantErr:     true,
+		},
+		{
+			name:        "Test add with tx link (empty url)",
+			initialData: []model.Link{},
+			input:       model.Link{URL: "", Alias: "alias"},
+			wantErr:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fp := createTempRepoFile(t, tt.initialData)
+			defer os.Remove(fp)
+
+			repo := NewFileRepository(fp)
+
+			if err := repo.AddWithTx(t.Context(), "", tt.input); (err != nil) != tt.wantErr {
+				t.Errorf("AddWithTx() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				links, _ := repo.GetByAlias(t.Context(), tt.input.Alias)
+				if links.URL != tt.input.URL {
+					t.Errorf("AddWithTx() url = %v, want %v", tt.input.URL, links.URL)
+				}
+			}
+		})
+	}
+}

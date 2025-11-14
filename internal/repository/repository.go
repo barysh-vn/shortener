@@ -15,6 +15,7 @@ var (
 
 type LinkRepository interface {
 	Add(ctx context.Context, link model.Link) error
+	AddWithTx(ctx context.Context, tx any, link model.Link) error
 	GetByAlias(ctx context.Context, alias string) (model.Link, error)
 	GetByURL(ctx context.Context, url string) (model.Link, error)
 }

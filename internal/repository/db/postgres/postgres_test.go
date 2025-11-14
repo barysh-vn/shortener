@@ -189,3 +189,96 @@ func TestPostgresRepository_GetByURL(t *testing.T) {
 		})
 	}
 }
+
+func TestPostgresRepository_AddWithTx(t *testing.T) {
+	tests := []struct {
+		name      string
+		link      model.Link
+		txSetup   func(db *sql.DB, mock sqlmock.Sqlmock) any
+		mockSetup func(sqlmock.Sqlmock)
+		wantErr   bool
+	}{
+		{
+			name: "Test AddWithTx (correct)",
+			link: model.Link{Alias: "alias", URL: "https://practicum.yandex.ru/"},
+			txSetup: func(db *sql.DB, mock sqlmock.Sqlmock) any {
+				mock.ExpectBegin()
+				tx, _ := db.Begin()
+				return tx
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url) VALUES ($1, $2)`)).
+					WithArgs("alias", "https://practicum.yandex.ru/").
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test AddWithTx (duplicate)",
+			link: model.Link{Alias: "alias", URL: "https://practicum.yandex.ru/"},
+			txSetup: func(db *sql.DB, mock sqlmock.Sqlmock) any {
+				mock.ExpectBegin()
+				tx, _ := db.Begin()
+				return tx
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url) VALUES ($1, $2)`)).
+					WithArgs("alias", "https://practicum.yandex.ru/").
+					WillReturnError(&pq.Error{Code: "23505"})
+			},
+			wantErr: true,
+		},
+		{
+			name: "Test AddWithTx (empty tx)",
+			link: model.Link{Alias: "alias", URL: "https://practicum.yandex.ru/"},
+			txSetup: func(db *sql.DB, mock sqlmock.Sqlmock) any {
+				return nil
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url) VALUES ($1, $2)`)).
+					WithArgs("alias", "https://practicum.yandex.ru/").
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test AddWithTx (invalid tx)",
+			link: model.Link{Alias: "alias", URL: "https://practicum.yandex.ru/"},
+			txSetup: func(db *sql.DB, mock sqlmock.Sqlmock) any {
+				return 123
+			},
+			mockSetup: nil,
+			wantErr:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to open sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			repo := NewPostgresRepository(db)
+
+			var tx any
+			if tt.txSetup != nil {
+				tx = tt.txSetup(db, mock)
+			}
+
+			if tt.mockSetup != nil {
+				tt.mockSetup(mock)
+			}
+
+			err = repo.AddWithTx(context.Background(), tx, tt.link)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AddWithTx() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("expectations error: %v", err)
+			}
+		})
+	}
+}

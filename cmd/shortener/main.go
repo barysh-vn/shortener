@@ -32,13 +32,16 @@ func main() {
 	if err != nil {
 		zap.L().Fatal("logger init error", zap.Error(err))
 	}
-	db, err := sql.Open("pgx", shortenerConfig.DataBaseDSN)
-	if err != nil {
-		zapLogger.Error("db open error", zap.Error(err))
-	}
-	defer db.Close()
 
+	zapLogger.Info("shortener config", zap.Any("config", shortenerConfig))
+
+	var db *sql.DB
 	if shortenerConfig.DataBaseDSN != "" {
+		db, err = sql.Open("pgx", shortenerConfig.DataBaseDSN)
+		if err != nil {
+			zapLogger.Error("db open error", zap.Error(err))
+		}
+		defer db.Close()
 		err = installMigrations(db)
 		if err != nil {
 			zapLogger.Error("db migration error", zap.Error(err))
@@ -61,7 +64,7 @@ func installMigrations(db *sql.DB) error {
 	migrationsPath := ""
 	for i := 0; i < 5; i++ {
 		candidate := filepath.Join(wd, "migrations")
-		if _, err := os.Stat(candidate); err == nil {
+		if _, err = os.Stat(candidate); err == nil {
 			migrationsPath = candidate
 			break
 		}

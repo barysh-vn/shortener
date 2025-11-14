@@ -389,7 +389,7 @@ func TestLinkHandler_getLink(t *testing.T) {
 				RandomService: tt.fields.RandomService,
 				URL:           tt.fields.URL,
 			}
-			got, err := h.getLink(tt.args.url)
+			got, err := h.getLink(t.Context(), tt.args.url)
 			if !tt.wantErr(t, err, fmt.Sprintf("getLink(%v)", tt.args.url)) {
 				return
 			}
@@ -474,6 +474,92 @@ func TestLinkHandler_getBody(t *testing.T) {
 				return
 			}
 			assert.Equalf(t, tt.want, got, "getBody(%v)", tt.args.requestBody)
+		})
+	}
+}
+
+func TestLinkHandler_HandleBatchAPIShorten(t *testing.T) {
+	type request struct {
+		method string
+		url    string
+		body   string
+	}
+	type response struct {
+		status      int
+		body        string
+		contentType string
+	}
+	tests := []struct {
+		name     string
+		handler  LinkHandler
+		request  request
+		response response
+	}{
+		{
+			name: "Test add batch urls",
+			handler: LinkHandler{
+				LinkService: &service.LinkService{
+					Storage: memory.Repository{
+						Values: map[string]string{},
+					},
+				},
+				RandomService: &service.RandomService{
+					Randomizer: alphabet.NewAlphabetRandomizer(),
+				},
+				URL: "http://localhost:8080",
+			},
+			request: request{
+				method: http.MethodPost,
+				url:    "http://localhost:8080/api/shorten/batch",
+				body:   "[{\"correlation_id\":\"id1\",\"original_url\":\"https://practicum.yandex.ru\"},{\"correlation_id\":\"id2\",\"original_url\":\"https://practicum.yandex.com\"}]",
+			},
+			response: response{
+				status:      http.StatusCreated,
+				contentType: "application/json; charset=utf-8",
+			},
+		},
+		{
+			name: "Test empty body",
+			handler: LinkHandler{
+				LinkService: &service.LinkService{
+					Storage: memory.Repository{
+						Values: map[string]string{},
+					},
+				},
+				RandomService: &service.RandomService{
+					Randomizer: alphabet.NewAlphabetRandomizer(),
+				},
+				URL: "http://localhost:8080",
+			},
+			request: request{
+				method: http.MethodPost,
+				url:    "http://localhost:8080/api/shorten/batch",
+			},
+			response: response{
+				status:      http.StatusBadRequest,
+				body:        `{"error":"incorrect request body"}`,
+				contentType: "application/json; charset=utf-8",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+
+			writer := httptest.NewRecorder()
+			context, _ := gin.CreateTestContext(writer)
+			req := httptest.NewRequest(tt.request.method, tt.request.url, strings.NewReader(tt.request.body))
+			context.Request = req
+
+			h := tt.handler
+
+			h.HandleBatchAPIShorten(context)
+
+			assert.Equal(t, tt.response.status, writer.Code)
+			if tt.response.body != "" {
+				assert.Equal(t, tt.response.body, writer.Body.String())
+			}
+			assert.Equal(t, tt.response.contentType, writer.Header().Get("Content-Type"))
 		})
 	}
 }

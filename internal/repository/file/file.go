@@ -67,6 +67,10 @@ func (r *Repository) Add(_ context.Context, link model.Link) error {
 	return r.writeAll(links)
 }
 
+func (r *Repository) AddWithTx(ctx context.Context, _ any, link model.Link) error {
+	return r.Add(ctx, link)
+}
+
 func (r *Repository) GetByAlias(_ context.Context, alias string) (model.Link, error) {
 	links, err := r.readAll()
 	if err != nil {

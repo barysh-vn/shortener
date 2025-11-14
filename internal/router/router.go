@@ -41,6 +41,7 @@ func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *g
 
 	apiGroup := r.Group("/api")
 	apiGroup.POST("/shorten", linkHandler.HandleAPIShorten)
+	apiGroup.POST("/shorten/batch", linkHandler.HandleBatchAPIShorten)
 
 	return r
 }

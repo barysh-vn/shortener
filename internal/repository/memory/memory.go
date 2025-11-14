@@ -35,6 +35,10 @@ func (s Repository) Add(_ context.Context, link model.Link) error {
 	return nil
 }
 
+func (s Repository) AddWithTx(ctx context.Context, _ any, link model.Link) error {
+	return s.Add(ctx, link)
+}
+
 func (s Repository) GetByAlias(_ context.Context, alias string) (model.Link, error) {
 	v, ok := s.Values[alias]
 	if !ok {

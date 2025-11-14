@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/repository"
@@ -17,12 +18,38 @@ func NewLinkService(storage repository.LinkRepository) *LinkService {
 	}
 }
 
-func (s *LinkService) Add(link model.Link) error {
-	return s.Storage.Add(context.Background(), link)
+func (s *LinkService) Add(ctx context.Context, link model.Link) error {
+	return s.Storage.Add(ctx, link)
 }
 
-func (s *LinkService) GetLinkByAlias(alias string) (*model.Link, error) {
-	link, err := s.Storage.GetByAlias(context.Background(), alias)
+func (s *LinkService) AddBatch(ctx context.Context, db *sql.DB, links []model.Link) error {
+	var tx *sql.Tx
+	var err error
+
+	if db != nil {
+		tx, err = db.BeginTx(ctx, nil)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, link := range links {
+		if err := s.Storage.AddWithTx(ctx, tx, link); err != nil {
+			if tx != nil {
+				tx.Rollback()
+			}
+			return err
+		}
+	}
+
+	if tx != nil {
+		return tx.Commit()
+	}
+	return nil
+}
+
+func (s *LinkService) GetLinkByAlias(ctx context.Context, alias string) (*model.Link, error) {
+	link, err := s.Storage.GetByAlias(ctx, alias)
 	if err != nil {
 		return &model.Link{}, err
 	}
@@ -30,8 +57,8 @@ func (s *LinkService) GetLinkByAlias(alias string) (*model.Link, error) {
 	return &link, nil
 }
 
-func (s *LinkService) GetLinkByURL(url string) (*model.Link, error) {
-	link, err := s.Storage.GetByURL(context.Background(), url)
+func (s *LinkService) GetLinkByURL(ctx context.Context, url string) (*model.Link, error) {
+	link, err := s.Storage.GetByURL(ctx, url)
 	if err != nil {
 		return &model.Link{}, err
 	}

@@ -31,7 +31,7 @@ func (h *LinkHandler) HandleGet(c *gin.Context) {
 		return
 	}
 
-	link, err := h.LinkService.GetLinkByAlias(alias)
+	link, err := h.LinkService.GetLinkByAlias(c, alias)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -47,7 +47,7 @@ func (h *LinkHandler) HandlePost(c *gin.Context) {
 		return
 	}
 
-	link, err := h.getLink(string(body))
+	link, err := h.getLink(c, string(body))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -70,7 +70,7 @@ func (h *LinkHandler) HandleAPIShorten(c *gin.Context) {
 		return
 	}
 
-	link, err := h.getLink(request.URL)
+	link, err := h.getLink(c, request.URL)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -81,9 +81,69 @@ func (h *LinkHandler) HandleAPIShorten(c *gin.Context) {
 	})
 }
 
+func (h *LinkHandler) HandleBatchAPIShorten(c *gin.Context) {
+	body, err := h.getBody(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var requests []api.ShortenBatchURLRequest
+	if err := json.Unmarshal(body, &requests); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect request body"})
+		return
+	}
+
+	var links []model.Link
+
+	for _, req := range requests {
+		link, err := h.LinkService.GetLinkByURL(c, req.URL)
+		if err != nil {
+			if errors.Is(err, repository.ErrNotFoundError) {
+				link = &model.Link{
+					URL:   req.URL,
+					Alias: h.RandomService.GetRandomString(8),
+				}
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+		}
+		links = append(links, *link)
+	}
+
+	var newLinks []model.Link
+	for _, link := range links {
+		if _, err := h.LinkService.GetLinkByAlias(c, link.Alias); errors.Is(err, repository.ErrNotFoundError) {
+			newLinks = append(newLinks, link)
+		}
+	}
+
+	if len(newLinks) > 0 {
+		if err := h.LinkService.AddBatch(c, h.DB, newLinks); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	var response []api.ShortenBatchURLResponse
+	for i, req := range requests {
+		response = append(response, api.ShortenBatchURLResponse{
+			ID:  req.ID,
+			URL: h.getURL(&links[i]),
+		})
+	}
+
+	c.JSON(http.StatusCreated, response)
+}
+
 func (h *LinkHandler) HandlePingDB(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(c, 1*time.Second)
 	defer cancel()
+	if h.DB == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "no db connection"})
+		return
+	}
 	if err := h.DB.PingContext(ctx); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -101,12 +161,12 @@ func (h *LinkHandler) getBody(c *gin.Context) ([]byte, error) {
 	return body, nil
 }
 
-func (h *LinkHandler) getLink(url string) (*model.Link, error) {
-	link, err := h.LinkService.GetLinkByURL(url)
+func (h *LinkHandler) getLink(ctx context.Context, url string) (*model.Link, error) {
+	link, err := h.LinkService.GetLinkByURL(ctx, url)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFoundError) {
 			link = &model.Link{URL: url, Alias: h.RandomService.GetRandomString(8)}
-			err = h.LinkService.Add(*link)
+			err = h.LinkService.Add(ctx, *link)
 			if err != nil && !errors.Is(err, repository.ErrExistsError) {
 				return link, err
 			}

@@ -33,6 +33,31 @@ func (r *Repository) Add(ctx context.Context, link model.Link) error {
 	return nil
 }
 
+func (r *Repository) AddWithTx(ctx context.Context, tx any, link model.Link) error {
+	if link.URL == "" || link.Alias == "" {
+		return repository.ErrInvalidDataError
+	}
+
+	if tx == nil {
+		return r.Add(ctx, link)
+	}
+
+	sqlTx, ok := tx.(*sql.Tx)
+	if !ok {
+		return errors.New("invalid transaction type")
+	}
+
+	query := `INSERT INTO links (alias, url) VALUES ($1, $2)`
+	_, err := sqlTx.ExecContext(ctx, query, link.Alias, link.URL)
+	if err != nil {
+		if isUniqueViolation(err) {
+			return repository.ErrExistsError
+		}
+		return err
+	}
+	return nil
+}
+
 func (r *Repository) GetByAlias(ctx context.Context, alias string) (model.Link, error) {
 	query := `SELECT alias, url FROM links WHERE alias = $1`
 	var link model.Link

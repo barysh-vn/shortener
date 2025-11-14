@@ -212,3 +212,76 @@ func TestRepository_Set(t *testing.T) {
 		})
 	}
 }
+
+func TestRepository_AddWithTx(t *testing.T) {
+	type fields struct {
+		Values map[string]string
+	}
+	type args struct {
+		key   string
+		value string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Test memory repository add with tx not existing key",
+			fields: fields{
+				Values: map[string]string{},
+			},
+			args: args{
+				key:   "key",
+				value: "value",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test memory repository add with tx existing key",
+			fields: fields{
+				Values: map[string]string{
+					"key": "value",
+				},
+			},
+			args: args{
+				key:   "key",
+				value: "foo",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Test memory repository add with tx empty key",
+			fields: fields{
+				Values: map[string]string{},
+			},
+			args: args{
+				key:   "",
+				value: "value",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Test memory repository add with tx empty value",
+			fields: fields{
+				Values: map[string]string{},
+			},
+			args: args{
+				key:   "key",
+				value: "",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := Repository{
+				Values: tt.fields.Values,
+			}
+			if err := s.AddWithTx(t.Context(), "", model.Link{Alias: tt.args.key, URL: tt.args.value}); (err != nil) != tt.wantErr {
+				t.Errorf("AddWithTx() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
