@@ -34,6 +34,9 @@ func main() {
 	var db *sql.DB
 	if shortenerConfig.DataBaseDSN != "" {
 		db, err = storage.GetDBStorage(shortenerConfig.DataBaseDSN, zapLogger)
+		if err != nil {
+			zapLogger.Error("get db storage error", zap.Error(err))
+		}
 		defer db.Close()
 	}
 
