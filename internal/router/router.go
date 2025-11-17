@@ -30,10 +30,11 @@ func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *g
 		RandomService: service.NewRandomService(alphabet.NewAlphabetRandomizer()),
 		URL:           config.BaseURL,
 		DB:            db,
+		Logger:        logger,
 	}
 
 	r.Use(middleware.RequestLoggerMiddleware(logger))
-	r.Use(middleware.GzipMiddleware())
+	r.Use(middleware.GzipMiddleware(logger))
 
 	r.GET("/ping", linkHandler.HandlePingDB)
 	r.GET("/:id", linkHandler.HandleGet)

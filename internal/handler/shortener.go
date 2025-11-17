@@ -15,6 +15,7 @@ import (
 	"github.com/barysh-vn/shortener/internal/repository"
 	"github.com/barysh-vn/shortener/internal/service"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type LinkHandler struct {
@@ -22,6 +23,7 @@ type LinkHandler struct {
 	RandomService *service.RandomService
 	URL           string
 	DB            *sql.DB
+	Logger        *zap.Logger
 }
 
 func (h *LinkHandler) HandleGet(c *gin.Context) {
@@ -99,7 +101,7 @@ func (h *LinkHandler) HandleBatchAPIShorten(c *gin.Context) {
 	}
 
 	var requests []api.ShortenBatchURLRequest
-	if err := json.Unmarshal(body, &requests); err != nil {
+	if err = json.Unmarshal(body, &requests); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect request body"})
 		return
 	}
@@ -115,7 +117,8 @@ func (h *LinkHandler) HandleBatchAPIShorten(c *gin.Context) {
 					Alias: h.RandomService.GetRandomString(8),
 				}
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				h.Logger.Info("Failed to get link", zap.String("url", req.URL), zap.Error(err))
+				c.JSON(http.StatusInternalServerError, gin.H{"error": http.StatusText(http.StatusInternalServerError)})
 				return
 			}
 		}
@@ -131,7 +134,8 @@ func (h *LinkHandler) HandleBatchAPIShorten(c *gin.Context) {
 
 	if len(newLinks) > 0 {
 		if err = h.LinkService.AddBatch(c, h.DB, newLinks); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			h.Logger.Info("Failed to add batch links", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": http.StatusText(http.StatusInternalServerError)})
 			return
 		}
 	}
@@ -151,11 +155,13 @@ func (h *LinkHandler) HandlePingDB(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c, 1*time.Second)
 	defer cancel()
 	if h.DB == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "no db connection"})
+		h.Logger.Info("Failed to ping db (no db connection)")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": http.StatusText(http.StatusInternalServerError)})
 		return
 	}
 	if err := h.DB.PingContext(ctx); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		h.Logger.Info("Failed to ping db", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": http.StatusText(http.StatusInternalServerError)})
 		return
 	}
 

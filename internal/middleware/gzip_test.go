@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func GzipData(input string) (*bytes.Buffer, error) {
@@ -105,7 +106,7 @@ func TestGzipMiddleware(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			router := gin.New()
-			router.Use(GzipMiddleware())
+			router.Use(GzipMiddleware(zap.L()))
 
 			router.GET("/ping", func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{"msg": "pong"})

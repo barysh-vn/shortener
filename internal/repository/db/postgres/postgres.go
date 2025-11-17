@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/repository"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type Repository struct {
@@ -26,7 +27,7 @@ func (r *Repository) Add(ctx context.Context, link model.Link) error {
 	_, err := r.db.ExecContext(ctx, query, link.Alias, link.URL)
 	if err != nil {
 		if isUniqueViolation(err) {
-			return repository.ErrExistsError
+			return fmt.Errorf("url already exists: %w", repository.ErrExistsError)
 		}
 		return err
 	}
@@ -51,7 +52,7 @@ func (r *Repository) AddWithTx(ctx context.Context, tx any, link model.Link) err
 	_, err := sqlTx.ExecContext(ctx, query, link.Alias, link.URL)
 	if err != nil {
 		if isUniqueViolation(err) {
-			return repository.ErrExistsError
+			return fmt.Errorf("url already exists: %w", repository.ErrExistsError)
 		}
 		return err
 	}
@@ -85,7 +86,9 @@ func (r *Repository) GetByURL(ctx context.Context, url string) (model.Link, erro
 }
 
 func isUniqueViolation(err error) bool {
-	var pqErr *pq.Error
-	ok := errors.As(err, &pqErr)
-	return ok && pqErr.Code == "23505"
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	return false
 }

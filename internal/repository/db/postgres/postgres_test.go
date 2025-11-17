@@ -8,7 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/barysh-vn/shortener/internal/model"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func TestPostgresRepository_Add(t *testing.T) {
@@ -34,7 +34,9 @@ func TestPostgresRepository_Add(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url) VALUES ($1, $2)`)).
 					WithArgs("alias", "https://practicum.yandex.ru/").
-					WillReturnError(&pq.Error{Code: "23505"})
+					WillReturnError(&pgconn.PgError{
+						Code: "23505",
+					})
 			},
 			wantErr: true,
 		},
@@ -224,7 +226,9 @@ func TestPostgresRepository_AddWithTx(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url) VALUES ($1, $2)`)).
 					WithArgs("alias", "https://practicum.yandex.ru/").
-					WillReturnError(&pq.Error{Code: "23505"})
+					WillReturnError(&pgconn.PgError{
+						Code: "23505",
+					})
 			},
 			wantErr: true,
 		},

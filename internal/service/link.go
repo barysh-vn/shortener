@@ -23,29 +23,29 @@ func (s *LinkService) Add(ctx context.Context, link model.Link) error {
 }
 
 func (s *LinkService) AddBatch(ctx context.Context, db *sql.DB, links []model.Link) error {
-	var tx *sql.Tx
-	var err error
-
-	if db != nil {
-		tx, err = db.BeginTx(ctx, nil)
-		if err != nil {
-			return err
+	if db == nil {
+		for _, link := range links {
+			if err := s.Add(ctx, link); err != nil {
+				return err
+			}
 		}
+		return nil
 	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
 
 	for _, link := range links {
-		if err := s.Storage.AddWithTx(ctx, tx, link); err != nil {
-			if tx != nil {
-				tx.Rollback()
-			}
+		if err = s.Storage.AddWithTx(ctx, tx, link); err != nil {
 			return err
 		}
 	}
 
-	if tx != nil {
-		return tx.Commit()
-	}
-	return nil
+	return tx.Commit()
 }
 
 func (s *LinkService) GetLinkByAlias(ctx context.Context, alias string) (*model.Link, error) {
