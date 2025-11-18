@@ -71,7 +71,7 @@ func TestRepository_Get(t *testing.T) {
 			s := Repository{
 				Values: tt.fields.Values,
 			}
-			got, err := s.GetByAlias(tt.args.key)
+			got, err := s.GetByAlias(t.Context(), tt.args.key)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -128,7 +128,7 @@ func TestRepository_GetKeyByValue(t *testing.T) {
 			s := Repository{
 				Values: tt.fields.Values,
 			}
-			got, err := s.GetByURL(tt.args.value)
+			got, err := s.GetByURL(t.Context(), tt.args.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetKeyByValue() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -206,8 +206,81 @@ func TestRepository_Set(t *testing.T) {
 			s := Repository{
 				Values: tt.fields.Values,
 			}
-			if err := s.Add(model.Link{Alias: tt.args.key, URL: tt.args.value}); (err != nil) != tt.wantErr {
+			if err := s.Add(t.Context(), model.Link{Alias: tt.args.key, URL: tt.args.value}); (err != nil) != tt.wantErr {
 				t.Errorf("Set() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestRepository_AddWithTx(t *testing.T) {
+	type fields struct {
+		Values map[string]string
+	}
+	type args struct {
+		key   string
+		value string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Test memory repository add with tx not existing key",
+			fields: fields{
+				Values: map[string]string{},
+			},
+			args: args{
+				key:   "key",
+				value: "value",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test memory repository add with tx existing key",
+			fields: fields{
+				Values: map[string]string{
+					"key": "value",
+				},
+			},
+			args: args{
+				key:   "key",
+				value: "foo",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Test memory repository add with tx empty key",
+			fields: fields{
+				Values: map[string]string{},
+			},
+			args: args{
+				key:   "",
+				value: "value",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Test memory repository add with tx empty value",
+			fields: fields{
+				Values: map[string]string{},
+			},
+			args: args{
+				key:   "key",
+				value: "",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := Repository{
+				Values: tt.fields.Values,
+			}
+			if err := s.AddWithTx(t.Context(), "", model.Link{Alias: tt.args.key, URL: tt.args.value}); (err != nil) != tt.wantErr {
+				t.Errorf("AddWithTx() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

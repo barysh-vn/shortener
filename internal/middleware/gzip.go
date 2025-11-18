@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type gzipResponseWriter struct {
@@ -26,7 +27,7 @@ func (r *gzipReader) Close() error {
 	return nil
 }
 
-func GzipMiddleware() gin.HandlerFunc {
+func GzipMiddleware(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if strings.Contains(c.GetHeader("Content-Encoding"), "gzip") {
 			gzr, err := gzip.NewReader(c.Request.Body)
@@ -45,7 +46,8 @@ func GzipMiddleware() gin.HandlerFunc {
 
 		gzw, err := gzip.NewWriterLevel(c.Writer, gzip.BestCompression)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating gzip writer"})
+			logger.Info("Error creating gzip writer", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": http.StatusText(http.StatusInternalServerError)})
 			return
 		}
 

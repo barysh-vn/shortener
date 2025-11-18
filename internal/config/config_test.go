@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -10,9 +11,10 @@ import (
 
 func TestGetShortenerConfig(t *testing.T) {
 	type envArgs struct {
-		ServerAddr string
-		BaseURL    string
-		FilePath   string
+		ServerAddr  string
+		BaseURL     string
+		FilePath    string
+		DataBaseDSN string
 	}
 
 	tests := []struct {
@@ -27,8 +29,7 @@ func TestGetShortenerConfig(t *testing.T) {
 					Host: "localhost",
 					Port: 8080,
 				},
-				BaseURL:  "http://localhost:8080",
-				FilePath: "./db.json",
+				BaseURL: "http://localhost:8080",
 			},
 			env: envArgs{},
 		},
@@ -39,13 +40,15 @@ func TestGetShortenerConfig(t *testing.T) {
 					Host: "localhost",
 					Port: 8181,
 				},
-				BaseURL:  "http://localhost:8282",
-				FilePath: "./flag_file.json",
+				BaseURL:     "http://localhost:8282",
+				FilePath:    "./flag_file.json",
+				DataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
 			},
 			env: envArgs{
-				ServerAddr: "localhost:8181",
-				BaseURL:    "http://localhost:8282",
-				FilePath:   "./flag_file.json",
+				ServerAddr:  "localhost:8181",
+				BaseURL:     "http://localhost:8282",
+				FilePath:    "./flag_file.json",
+				DataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
 			},
 		},
 	}
@@ -59,6 +62,9 @@ func TestGetShortenerConfig(t *testing.T) {
 			}
 			if tt.env.FilePath != "" {
 				t.Setenv("FILE_STORAGE_PATH", tt.env.FilePath)
+			}
+			if tt.env.DataBaseDSN != "" {
+				t.Setenv("DATABASE_DSN", tt.env.DataBaseDSN)
 			}
 			fs := flag.NewFlagSet("test", flag.ContinueOnError)
 

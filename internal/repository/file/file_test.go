@@ -66,12 +66,12 @@ func TestRepository_Add(t *testing.T) {
 
 			repo := NewFileRepository(fp)
 
-			if err := repo.Add(tt.input); (err != nil) != tt.wantErr {
+			if err := repo.Add(t.Context(), tt.input); (err != nil) != tt.wantErr {
 				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			if !tt.wantErr {
-				links, _ := repo.GetByAlias(tt.input.Alias)
+				links, _ := repo.GetByAlias(t.Context(), tt.input.Alias)
 				if links.URL != tt.input.URL {
 					t.Errorf("Add() url = %v, want %v", tt.input.URL, links.URL)
 				}
@@ -114,7 +114,7 @@ func TestRepository_GetByAlias(t *testing.T) {
 
 			repo := NewFileRepository(fp)
 
-			got, err := repo.GetByAlias(tt.inputAlias)
+			got, err := repo.GetByAlias(t.Context(), tt.inputAlias)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("GetByAlias() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -160,13 +160,69 @@ func TestRepository_GetByURL(t *testing.T) {
 
 			repo := NewFileRepository(fp)
 
-			got, err := repo.GetByURL(tt.inputURL)
+			got, err := repo.GetByURL(t.Context(), tt.inputURL)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("GetByURL() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			if err == nil && got != tt.wantLink {
 				t.Errorf("GetByURL() link = %v, want %v", got, tt.wantLink)
+			}
+		})
+	}
+}
+
+func TestRepository_AddWithTx(t *testing.T) {
+	tests := []struct {
+		name        string
+		initialData []model.Link
+		input       model.Link
+		wantErr     bool
+	}{
+		{
+			name:        "Test add with tx link (correct)",
+			initialData: []model.Link{},
+			input:       model.Link{URL: "https://practicum.yandex.ru/", Alias: "alias"},
+			wantErr:     false,
+		},
+		{
+			name: "Test add with tx link (duplicate)",
+			initialData: []model.Link{
+				{URL: "https://practicum.yandex.ru/", Alias: "alias1"},
+			},
+			input:   model.Link{URL: "https://practicum.yandex.ru/", Alias: "alias2"},
+			wantErr: true,
+		},
+		{
+			name:        "Test add with tx link (empty alias)",
+			initialData: []model.Link{},
+			input:       model.Link{URL: "https://test.com", Alias: ""},
+			wantErr:     true,
+		},
+		{
+			name:        "Test add with tx link (empty url)",
+			initialData: []model.Link{},
+			input:       model.Link{URL: "", Alias: "alias"},
+			wantErr:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fp := createTempRepoFile(t, tt.initialData)
+			defer os.Remove(fp)
+
+			repo := NewFileRepository(fp)
+
+			if err := repo.AddWithTx(t.Context(), "", tt.input); (err != nil) != tt.wantErr {
+				t.Errorf("AddWithTx() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				links, _ := repo.GetByAlias(t.Context(), tt.input.Alias)
+				if links.URL != tt.input.URL {
+					t.Errorf("AddWithTx() url = %v, want %v", tt.input.URL, links.URL)
+				}
 			}
 		})
 	}

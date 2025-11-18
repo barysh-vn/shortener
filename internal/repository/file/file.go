@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -46,7 +47,7 @@ func (r *Repository) writeAll(links []model.Link) error {
 	return os.WriteFile(r.filePath, data, 0644)
 }
 
-func (r *Repository) Add(link model.Link) error {
+func (r *Repository) Add(_ context.Context, link model.Link) error {
 	if link.URL == "" || link.Alias == "" {
 		return repository.ErrInvalidDataError
 	}
@@ -66,7 +67,11 @@ func (r *Repository) Add(link model.Link) error {
 	return r.writeAll(links)
 }
 
-func (r *Repository) GetByAlias(alias string) (model.Link, error) {
+func (r *Repository) AddWithTx(ctx context.Context, _ any, link model.Link) error {
+	return r.Add(ctx, link)
+}
+
+func (r *Repository) GetByAlias(_ context.Context, alias string) (model.Link, error) {
 	links, err := r.readAll()
 	if err != nil {
 		return model.Link{}, err
@@ -80,7 +85,7 @@ func (r *Repository) GetByAlias(alias string) (model.Link, error) {
 	return model.Link{}, repository.ErrNotFoundError
 }
 
-func (r *Repository) GetByURL(url string) (model.Link, error) {
+func (r *Repository) GetByURL(_ context.Context, url string) (model.Link, error) {
 	links, err := r.readAll()
 	if err != nil {
 		return model.Link{}, err

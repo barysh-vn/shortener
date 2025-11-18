@@ -1,6 +1,8 @@
 package memory
 
 import (
+	"context"
+
 	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/repository"
 )
@@ -15,7 +17,7 @@ func NewMemoryRepository() *Repository {
 	}
 }
 
-func (s Repository) Add(link model.Link) error {
+func (s Repository) Add(_ context.Context, link model.Link) error {
 	if len(link.URL) == 0 {
 		return repository.ErrInvalidDataError
 	}
@@ -33,7 +35,11 @@ func (s Repository) Add(link model.Link) error {
 	return nil
 }
 
-func (s Repository) GetByAlias(alias string) (model.Link, error) {
+func (s Repository) AddWithTx(ctx context.Context, _ any, link model.Link) error {
+	return s.Add(ctx, link)
+}
+
+func (s Repository) GetByAlias(_ context.Context, alias string) (model.Link, error) {
 	v, ok := s.Values[alias]
 	if !ok {
 		return model.Link{}, repository.ErrNotFoundError
@@ -42,7 +48,7 @@ func (s Repository) GetByAlias(alias string) (model.Link, error) {
 	return model.Link{URL: v, Alias: alias}, nil
 }
 
-func (s Repository) GetByURL(url string) (model.Link, error) {
+func (s Repository) GetByURL(_ context.Context, url string) (model.Link, error) {
 	for k, v := range s.Values {
 		if v == url {
 			return model.Link{URL: url, Alias: k}, nil
