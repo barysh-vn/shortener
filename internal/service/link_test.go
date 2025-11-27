@@ -27,8 +27,8 @@ func TestLinkService_Add(t *testing.T) {
 		{
 			name: "Test add link with service",
 			fields: fields{
-				Storage: memory.Repository{
-					Values: map[string]string{},
+				Storage: &memory.Repository{
+					Links: []model.Link{},
 				},
 			},
 			args: args{
@@ -69,9 +69,12 @@ func TestLinkService_GetLinkByAlias(t *testing.T) {
 		{
 			name: "Test get existing link by alias",
 			fields: fields{
-				Storage: memory.Repository{
-					Values: map[string]string{
-						"example": "http://example.com",
+				Storage: &memory.Repository{
+					Links: []model.Link{
+						{
+							Alias: "example",
+							URL:   "http://example.com",
+						},
 					},
 				},
 			},
@@ -87,9 +90,12 @@ func TestLinkService_GetLinkByAlias(t *testing.T) {
 		{
 			name: "Test get not existing link by alias",
 			fields: fields{
-				Storage: memory.Repository{
-					Values: map[string]string{
-						"example": "http://example.com",
+				Storage: &memory.Repository{
+					Links: []model.Link{
+						{
+							Alias: "example",
+							URL:   "http://example.com",
+						},
 					},
 				},
 			},
@@ -134,9 +140,12 @@ func TestLinkService_GetLinkByURL(t *testing.T) {
 		{
 			name: "Test get existing link by url",
 			fields: fields{
-				Storage: memory.Repository{
-					Values: map[string]string{
-						"example": "http://example.com",
+				Storage: &memory.Repository{
+					Links: []model.Link{
+						{
+							URL:   "http://example.com",
+							Alias: "example",
+						},
 					},
 				},
 			},
@@ -152,9 +161,12 @@ func TestLinkService_GetLinkByURL(t *testing.T) {
 		{
 			name: "Test get not existing link by url",
 			fields: fields{
-				Storage: memory.Repository{
-					Values: map[string]string{
-						"example": "http://example.com",
+				Storage: &memory.Repository{
+					Links: []model.Link{
+						{
+							URL:   "http://example.com",
+							Alias: "example",
+						},
 					},
 				},
 			},
@@ -228,8 +240,8 @@ func TestLinkService_AddBatch(t *testing.T) {
 		{
 			name: "Test add batch",
 			fields: fields{
-				Storage: memory.Repository{
-					Values: map[string]string{},
+				Storage: &memory.Repository{
+					Links: []model.Link{},
 				},
 			},
 			args: args{
@@ -261,6 +273,100 @@ func TestLinkService_AddBatch(t *testing.T) {
 			defer db.Close()
 			if err = s.AddBatch(t.Context(), db, tt.args.links); (err != nil) != tt.wantErr {
 				t.Errorf("AddBatch() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestLinkService_GetLinksByUserID(t *testing.T) {
+	type fields struct {
+		Storage repository.LinkRepository
+	}
+	type args struct {
+		userID string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *[]model.Link
+		wantErr bool
+	}{
+		{
+			name: "Test get links by url user id (correct)",
+			fields: fields{
+				Storage: &memory.Repository{
+					Links: []model.Link{
+						{
+							URL:    "http://example.com",
+							Alias:  "example",
+							UserID: "1",
+						},
+					},
+				},
+			},
+			args: args{
+				userID: "1",
+			},
+			want: &[]model.Link{
+				{
+					URL:    "http://example.com",
+					Alias:  "example",
+					UserID: "1",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test get links by url user id (empty)",
+			fields: fields{
+				Storage: &memory.Repository{
+					Links: []model.Link{
+						{
+							URL:    "http://example.com",
+							Alias:  "example",
+							UserID: "1",
+						},
+					},
+				},
+			},
+			args: args{
+				userID: "2",
+			},
+			want:    &[]model.Link{},
+			wantErr: false,
+		},
+		{
+			name: "Test get links by url user id (incorrect)",
+			fields: fields{
+				Storage: &memory.Repository{
+					Links: []model.Link{
+						{
+							URL:    "http://example.com",
+							Alias:  "example",
+							UserID: "1",
+						},
+					},
+				},
+			},
+			args: args{
+				userID: "",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &LinkService{
+				Storage: tt.fields.Storage,
+			}
+			got, err := s.GetLinksByUserID(t.Context(), tt.args.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetLinksByUserID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetLinksByUserID() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

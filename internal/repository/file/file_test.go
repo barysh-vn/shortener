@@ -3,6 +3,7 @@ package file
 import (
 	"encoding/json"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/barysh-vn/shortener/internal/model"
@@ -223,6 +224,61 @@ func TestRepository_AddWithTx(t *testing.T) {
 				if links.URL != tt.input.URL {
 					t.Errorf("AddWithTx() url = %v, want %v", tt.input.URL, links.URL)
 				}
+			}
+		})
+	}
+}
+
+func TestRepository_GetByUserID(t *testing.T) {
+	tests := []struct {
+		name        string
+		initialData []model.Link
+		userID      string
+		want        []model.Link
+		wantErr     bool
+	}{
+		{
+			name: "Test get links by user (correct)",
+			initialData: []model.Link{
+				{URL: "https://yandex.ru/", Alias: "alias", UserID: "1"},
+			},
+			userID: "1",
+			want: []model.Link{
+				{URL: "https://yandex.ru/", Alias: "alias", UserID: "1"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test get links by user (empty)",
+			initialData: []model.Link{
+				{URL: "https://yandex.ru/", Alias: "alias", UserID: "1"},
+			},
+			userID:  "2",
+			want:    []model.Link{},
+			wantErr: false,
+		},
+		{
+			name:        "Test get links by user (error)",
+			initialData: []model.Link{},
+			userID:      "",
+			want:        []model.Link{},
+			wantErr:     true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fp := createTempRepoFile(t, tt.initialData)
+			defer os.Remove(fp)
+
+			repo := NewFileRepository(fp)
+
+			got, err := repo.GetByUserID(t.Context(), tt.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetByUserID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetByUserID() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

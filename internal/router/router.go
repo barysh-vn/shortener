@@ -2,6 +2,7 @@ package router
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/barysh-vn/shortener/internal/handler"
 	"github.com/barysh-vn/shortener/internal/middleware"
@@ -33,6 +34,11 @@ func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *g
 		Logger:        logger,
 	}
 
+	secret := "SUPER_SECRET_32_CHARS"
+	tokenService := service.NewTokenService(secret, 365*24*time.Hour)
+
+	r.Use(middleware.AuthJWTMiddleware(tokenService, "jwt"))
+
 	r.Use(middleware.RequestLoggerMiddleware(logger))
 	r.Use(middleware.GzipMiddleware(logger))
 
@@ -43,6 +49,7 @@ func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *g
 	apiGroup := r.Group("/api")
 	apiGroup.POST("/shorten", linkHandler.HandleAPIShorten)
 	apiGroup.POST("/shorten/batch", linkHandler.HandleBatchAPIShorten)
+	apiGroup.GET("/user/urls", linkHandler.HandleUserURLs)
 
 	return r
 }

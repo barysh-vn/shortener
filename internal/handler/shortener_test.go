@@ -12,7 +12,6 @@ import (
 	"github.com/barysh-vn/shortener/internal/repository/memory"
 	"github.com/barysh-vn/shortener/internal/service"
 	"github.com/gin-gonic/gin"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,8 +37,8 @@ func TestLinkHandler_HandleGet(t *testing.T) {
 			name: "Test empty alias",
 			handler: LinkHandler{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{},
+					Storage: &memory.Repository{
+						Links: []model.Link{},
 					},
 				},
 				RandomService: &service.RandomService{
@@ -61,9 +60,12 @@ func TestLinkHandler_HandleGet(t *testing.T) {
 			name: "Test redirect",
 			handler: LinkHandler{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{
-							"foo": "https://google.com",
+					Storage: &memory.Repository{
+						Links: []model.Link{
+							{
+								Alias: "foo",
+								URL:   "https://google.com",
+							},
 						},
 					},
 				},
@@ -90,9 +92,12 @@ func TestLinkHandler_HandleGet(t *testing.T) {
 			name: "Test not exist alias",
 			handler: LinkHandler{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{
-							"foo": "https://google.com",
+					Storage: &memory.Repository{
+						Links: []model.Link{
+							{
+								Alias: "foo",
+								URL:   "https://google.com",
+							},
 						},
 					},
 				},
@@ -160,8 +165,8 @@ func TestLinkHandler_HandlePost(t *testing.T) {
 			name: "Test add url",
 			handler: LinkHandler{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{},
+					Storage: &memory.Repository{
+						Links: []model.Link{},
 					},
 				},
 				RandomService: &service.RandomService{
@@ -183,9 +188,12 @@ func TestLinkHandler_HandlePost(t *testing.T) {
 			name: "Test add existing url",
 			handler: LinkHandler{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{
-							"foo": "https://practicum.yandex.ru",
+					Storage: &memory.Repository{
+						Links: []model.Link{
+							{
+								Alias: "foo",
+								URL:   "https://practicum.yandex.ru",
+							},
 						},
 					},
 				},
@@ -209,8 +217,8 @@ func TestLinkHandler_HandlePost(t *testing.T) {
 			name: "Test empty body",
 			handler: LinkHandler{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{},
+					Storage: &memory.Repository{
+						Links: []model.Link{},
 					},
 				},
 				RandomService: &service.RandomService{
@@ -270,8 +278,8 @@ func TestLinkHandler_getURL(t *testing.T) {
 			name: "Test get url correct",
 			fields: fields{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{},
+					Storage: &memory.Repository{
+						Links: []model.Link{},
 					},
 				},
 				RandomService: &service.RandomService{
@@ -321,8 +329,8 @@ func TestLinkHandler_getLink(t *testing.T) {
 			name: "Test get link correct",
 			fields: fields{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{},
+					Storage: &memory.Repository{
+						Links: []model.Link{},
 					},
 				},
 				RandomService: &service.RandomService{
@@ -342,9 +350,12 @@ func TestLinkHandler_getLink(t *testing.T) {
 			name: "Test get link correct (exist link)",
 			fields: fields{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{
-							"fooBar": "https://practicum.yandex.ru",
+					Storage: &memory.Repository{
+						Links: []model.Link{
+							{
+								Alias: "fooBar",
+								URL:   "https://practicum.yandex.ru",
+							},
 						},
 					},
 				},
@@ -366,8 +377,8 @@ func TestLinkHandler_getLink(t *testing.T) {
 			name: "Test get link incorrect (empty url)",
 			fields: fields{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{},
+					Storage: &memory.Repository{
+						Links: []model.Link{},
 					},
 				},
 				RandomService: &service.RandomService{
@@ -389,7 +400,11 @@ func TestLinkHandler_getLink(t *testing.T) {
 				RandomService: tt.fields.RandomService,
 				URL:           tt.fields.URL,
 			}
-			got, err := h.getLink(t.Context(), tt.args.url)
+			gin.SetMode(gin.TestMode)
+
+			writer := httptest.NewRecorder()
+			context, _ := gin.CreateTestContext(writer)
+			got, err := h.getLink(context, tt.args.url)
 			if !tt.wantErr(t, err, fmt.Sprintf("getLink(%v)", tt.args.url)) {
 				return
 			}
@@ -419,8 +434,8 @@ func TestLinkHandler_getBody(t *testing.T) {
 			name: "Test get body correct",
 			fields: fields{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{},
+					Storage: &memory.Repository{
+						Links: []model.Link{},
 					},
 				},
 				RandomService: &service.RandomService{
@@ -438,8 +453,8 @@ func TestLinkHandler_getBody(t *testing.T) {
 			name: "Test get body incorrect (empty body)",
 			fields: fields{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{},
+					Storage: &memory.Repository{
+						Links: []model.Link{},
 					},
 				},
 				RandomService: &service.RandomService{
@@ -499,8 +514,8 @@ func TestLinkHandler_HandleBatchAPIShorten(t *testing.T) {
 			name: "Test add batch urls",
 			handler: LinkHandler{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{},
+					Storage: &memory.Repository{
+						Links: []model.Link{},
 					},
 				},
 				RandomService: &service.RandomService{
@@ -522,8 +537,8 @@ func TestLinkHandler_HandleBatchAPIShorten(t *testing.T) {
 			name: "Test empty body",
 			handler: LinkHandler{
 				LinkService: &service.LinkService{
-					Storage: memory.Repository{
-						Values: map[string]string{},
+					Storage: &memory.Repository{
+						Links: []model.Link{},
 					},
 				},
 				RandomService: &service.RandomService{
