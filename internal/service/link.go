@@ -65,3 +65,12 @@ func (s *LinkService) GetLinkByURL(ctx context.Context, url string) (*model.Link
 
 	return &link, nil
 }
+
+func (s *LinkService) GetLinksByUserID(ctx context.Context, userID string) (*[]model.Link, error) {
+	links, err := s.Storage.GetByUserID(ctx, userID)
+	if err != nil {
+		return &[]model.Link{}, err
+	}
+
+	return &links, nil
+}

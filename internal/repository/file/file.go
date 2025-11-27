@@ -98,3 +98,23 @@ func (r *Repository) GetByURL(_ context.Context, url string) (model.Link, error)
 	}
 	return model.Link{}, repository.ErrNotFoundError
 }
+
+func (r *Repository) GetByUserID(_ context.Context, userID string) ([]model.Link, error) {
+	if userID == "" {
+		return nil, repository.ErrInvalidDataError
+	}
+
+	links, err := r.readAll()
+	if err != nil {
+		return nil, err
+	}
+
+	result := []model.Link{}
+	for _, l := range links {
+		if l.UserID == userID {
+			result = append(result, l)
+		}
+	}
+
+	return result, nil
+}

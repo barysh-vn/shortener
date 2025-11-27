@@ -28,7 +28,7 @@ func TestNewMemoryRepository(t *testing.T) {
 
 func TestRepository_Get(t *testing.T) {
 	type fields struct {
-		Values map[string]string
+		Values []model.Link
 	}
 	type args struct {
 		key string
@@ -43,8 +43,11 @@ func TestRepository_Get(t *testing.T) {
 		{
 			name: "Test memory repository get existing value",
 			fields: fields{
-				Values: map[string]string{
-					"key": "value",
+				Values: []model.Link{
+					{
+						Alias: "key",
+						URL:   "value",
+					},
 				},
 			},
 			args: args{
@@ -56,8 +59,11 @@ func TestRepository_Get(t *testing.T) {
 		{
 			name: "Test memory repository get not existing value",
 			fields: fields{
-				Values: map[string]string{
-					"key": "value",
+				Values: []model.Link{
+					{
+						Alias: "key",
+						URL:   "value",
+					},
 				},
 			},
 			args: args{
@@ -69,7 +75,7 @@ func TestRepository_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := Repository{
-				Values: tt.fields.Values,
+				Links: tt.fields.Values,
 			}
 			got, err := s.GetByAlias(t.Context(), tt.args.key)
 			if (err != nil) != tt.wantErr {
@@ -85,7 +91,7 @@ func TestRepository_Get(t *testing.T) {
 
 func TestRepository_GetKeyByValue(t *testing.T) {
 	type fields struct {
-		Values map[string]string
+		Values []model.Link
 	}
 	type args struct {
 		value string
@@ -100,8 +106,11 @@ func TestRepository_GetKeyByValue(t *testing.T) {
 		{
 			name: "Test memory repository get existing key by value",
 			fields: fields{
-				Values: map[string]string{
-					"key": "value",
+				Values: []model.Link{
+					{
+						Alias: "key",
+						URL:   "value",
+					},
 				},
 			},
 			args: args{
@@ -113,8 +122,11 @@ func TestRepository_GetKeyByValue(t *testing.T) {
 		{
 			name: "Test memory repository get not existing key by value",
 			fields: fields{
-				Values: map[string]string{
-					"key": "value",
+				Values: []model.Link{
+					{
+						Alias: "key",
+						URL:   "value",
+					},
 				},
 			},
 			args: args{
@@ -126,7 +138,7 @@ func TestRepository_GetKeyByValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := Repository{
-				Values: tt.fields.Values,
+				Links: tt.fields.Values,
 			}
 			got, err := s.GetByURL(t.Context(), tt.args.value)
 			if (err != nil) != tt.wantErr {
@@ -142,7 +154,7 @@ func TestRepository_GetKeyByValue(t *testing.T) {
 
 func TestRepository_Set(t *testing.T) {
 	type fields struct {
-		Values map[string]string
+		Values []model.Link
 	}
 	type args struct {
 		key   string
@@ -157,7 +169,7 @@ func TestRepository_Set(t *testing.T) {
 		{
 			name: "Test memory repository set not existing key",
 			fields: fields{
-				Values: map[string]string{},
+				Values: []model.Link{},
 			},
 			args: args{
 				key:   "key",
@@ -168,8 +180,11 @@ func TestRepository_Set(t *testing.T) {
 		{
 			name: "Test memory repository set existing key",
 			fields: fields{
-				Values: map[string]string{
-					"key": "value",
+				Values: []model.Link{
+					{
+						Alias: "key",
+						URL:   "value",
+					},
 				},
 			},
 			args: args{
@@ -181,7 +196,7 @@ func TestRepository_Set(t *testing.T) {
 		{
 			name: "Test memory repository set empty key",
 			fields: fields{
-				Values: map[string]string{},
+				Values: []model.Link{},
 			},
 			args: args{
 				key:   "",
@@ -192,7 +207,7 @@ func TestRepository_Set(t *testing.T) {
 		{
 			name: "Test memory repository set empty value",
 			fields: fields{
-				Values: map[string]string{},
+				Values: []model.Link{},
 			},
 			args: args{
 				key:   "key",
@@ -204,7 +219,7 @@ func TestRepository_Set(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := Repository{
-				Values: tt.fields.Values,
+				Links: tt.fields.Values,
 			}
 			if err := s.Add(t.Context(), model.Link{Alias: tt.args.key, URL: tt.args.value}); (err != nil) != tt.wantErr {
 				t.Errorf("Set() error = %v, wantErr %v", err, tt.wantErr)
@@ -215,7 +230,7 @@ func TestRepository_Set(t *testing.T) {
 
 func TestRepository_AddWithTx(t *testing.T) {
 	type fields struct {
-		Values map[string]string
+		Values []model.Link
 	}
 	type args struct {
 		key   string
@@ -230,7 +245,7 @@ func TestRepository_AddWithTx(t *testing.T) {
 		{
 			name: "Test memory repository add with tx not existing key",
 			fields: fields{
-				Values: map[string]string{},
+				Values: []model.Link{},
 			},
 			args: args{
 				key:   "key",
@@ -241,8 +256,11 @@ func TestRepository_AddWithTx(t *testing.T) {
 		{
 			name: "Test memory repository add with tx existing key",
 			fields: fields{
-				Values: map[string]string{
-					"key": "value",
+				Values: []model.Link{
+					{
+						Alias: "key",
+						URL:   "value",
+					},
 				},
 			},
 			args: args{
@@ -254,7 +272,7 @@ func TestRepository_AddWithTx(t *testing.T) {
 		{
 			name: "Test memory repository add with tx empty key",
 			fields: fields{
-				Values: map[string]string{},
+				Values: []model.Link{},
 			},
 			args: args{
 				key:   "",
@@ -265,7 +283,7 @@ func TestRepository_AddWithTx(t *testing.T) {
 		{
 			name: "Test memory repository add with tx empty value",
 			fields: fields{
-				Values: map[string]string{},
+				Values: []model.Link{},
 			},
 			args: args{
 				key:   "key",
@@ -277,10 +295,87 @@ func TestRepository_AddWithTx(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := Repository{
-				Values: tt.fields.Values,
+				Links: tt.fields.Values,
 			}
 			if err := s.AddWithTx(t.Context(), "", model.Link{Alias: tt.args.key, URL: tt.args.value}); (err != nil) != tt.wantErr {
 				t.Errorf("AddWithTx() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestRepository_GetByUserID(t *testing.T) {
+	type fields struct {
+		Links []model.Link
+	}
+	type args struct {
+		userID string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    []model.Link
+		wantErr bool
+	}{
+		{
+			name: "Test memory repository get empty by user id",
+			fields: fields{
+				Links: []model.Link{},
+			},
+			args: args{
+				userID: "1",
+			},
+			want:    []model.Link{},
+			wantErr: false,
+		},
+		{
+			name: "Test memory repository get by user id",
+			fields: fields{
+				Links: []model.Link{
+					{
+						Alias:  "foo",
+						URL:    "bar",
+						UserID: "1",
+					},
+				},
+			},
+			args: args{
+				userID: "1",
+			},
+			want: []model.Link{
+				{
+					Alias:  "foo",
+					URL:    "bar",
+					UserID: "1",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test memory repository get by empty user id",
+			fields: fields{
+				Links: []model.Link{},
+			},
+			args: args{
+				userID: "",
+			},
+			want:    []model.Link{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := Repository{
+				Links: tt.fields.Links,
+			}
+			got, err := s.GetByUserID(t.Context(), tt.args.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetByUserID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetByUserID() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

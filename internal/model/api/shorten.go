@@ -17,3 +17,8 @@ type ShortenBatchURLResponse struct {
 	ID  string `json:"correlation_id"`
 	URL string `json:"short_url"`
 }
+
+type ShortenUserURLsResponse struct {
+	Alias string `json:"short_url"`
+	URL   string `json:"original_url"`
+}
