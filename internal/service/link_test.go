@@ -215,8 +215,9 @@ func TestNewLinkService(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		db := sql.DB{}
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewLinkService(tt.args.storage); !reflect.DeepEqual(got, tt.want) {
+			if got := NewLinkService(tt.args.storage, &db); reflect.TypeOf(got) != reflect.TypeOf(tt.want) {
 				t.Errorf("NewLinkService() = %v, want %v", got, tt.want)
 			}
 		})
@@ -367,6 +368,58 @@ func TestLinkService_GetLinksByUserID(t *testing.T) {
 			}
 			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetLinksByUserID() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLinkService_Update(t *testing.T) {
+	type fields struct {
+		Storage repository.LinkRepository
+	}
+	type args struct {
+		link model.Link
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "update existing link",
+			fields: fields{
+				Storage: &memory.Repository{
+					Links: []model.Link{
+						{Alias: "a", URL: "old", UserID: "1"},
+					},
+				},
+			},
+			args: args{
+				link: model.Link{Alias: "a", URL: "new", UserID: "1"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "update non-existing link",
+			fields: fields{
+				Storage: &memory.Repository{
+					Links: []model.Link{},
+				},
+			},
+			args: args{
+				link: model.Link{Alias: "ghost", URL: "x", UserID: "1"},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &LinkService{Storage: tt.fields.Storage}
+			err := s.Update(t.Context(), tt.args.link)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

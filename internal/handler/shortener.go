@@ -39,6 +39,11 @@ func (h *LinkHandler) HandleGet(c *gin.Context) {
 		return
 	}
 
+	if link.IsDeleted {
+		c.JSON(http.StatusGone, gin.H{"error": http.StatusText(http.StatusGone)})
+		return
+	}
+
 	c.Redirect(http.StatusTemporaryRedirect, link.URL)
 }
 
@@ -196,6 +201,27 @@ func (h *LinkHandler) HandleUserURLs(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *LinkHandler) HandleBatchAPIDelete(c *gin.Context) {
+	body, err := h.getBody(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": http.StatusText(http.StatusBadRequest)})
+		return
+	}
+
+	var aliases []string
+	if err = json.Unmarshal(body, &aliases); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": http.StatusText(http.StatusBadRequest)})
+		return
+	}
+
+	userID := c.GetString("user_id")
+	for _, alias := range aliases {
+		h.LinkService.Delete(userID, alias)
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"status": http.StatusText(http.StatusAccepted)})
 }
 
 func (h *LinkHandler) getBody(c *gin.Context) ([]byte, error) {

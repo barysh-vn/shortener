@@ -27,7 +27,7 @@ func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *g
 		repo = file.NewFileRepository(config.FilePath)
 	}
 	linkHandler := handler.LinkHandler{
-		LinkService:   service.NewLinkService(repo),
+		LinkService:   service.NewLinkService(repo, db),
 		RandomService: service.NewRandomService(alphabet.NewAlphabetRandomizer()),
 		URL:           config.BaseURL,
 		DB:            db,
@@ -50,6 +50,7 @@ func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *g
 	apiGroup.POST("/shorten", linkHandler.HandleAPIShorten)
 	apiGroup.POST("/shorten/batch", linkHandler.HandleBatchAPIShorten)
 	apiGroup.GET("/user/urls", linkHandler.HandleUserURLs)
+	apiGroup.DELETE("/user/urls", linkHandler.HandleBatchAPIDelete)
 
 	return r
 }

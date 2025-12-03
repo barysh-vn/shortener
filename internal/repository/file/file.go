@@ -118,3 +118,33 @@ func (r *Repository) GetByUserID(_ context.Context, userID string) ([]model.Link
 
 	return result, nil
 }
+
+func (r *Repository) Update(_ context.Context, link model.Link) error {
+	if link.Alias == "" {
+		return repository.ErrInvalidDataError
+	}
+
+	links, err := r.readAll()
+	if err != nil {
+		return err
+	}
+
+	updated := false
+	for i, l := range links {
+		if l.Alias == link.Alias {
+			links[i] = link
+			updated = true
+			break
+		}
+	}
+
+	if !updated {
+		return repository.ErrNotFoundError
+	}
+
+	return r.writeAll(links)
+}
+
+func (r *Repository) UpdateWithTx(ctx context.Context, _ any, link model.Link) error {
+	return r.Update(ctx, link)
+}

@@ -3,19 +3,38 @@ package service
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/barysh-vn/shortener/internal/model"
 	"github.com/barysh-vn/shortener/internal/repository"
 )
 
-type LinkService struct {
-	Storage repository.LinkRepository
+const (
+	batchSize    = 100
+	workersCount = 5
+)
+
+type deleteTask struct {
+	UserID string
+	Alias  string
 }
 
-func NewLinkService(storage repository.LinkRepository) *LinkService {
-	return &LinkService{
+type LinkService struct {
+	Storage repository.LinkRepository
+	DB      *sql.DB
+	taskCh  chan deleteTask
+}
+
+func NewLinkService(storage repository.LinkRepository, db *sql.DB) *LinkService {
+	s := &LinkService{
 		Storage: storage,
+		DB:      db,
+		taskCh:  make(chan deleteTask, 1000),
 	}
+
+	go s.FanIn(workersCount)
+
+	return s
 }
 
 func (s *LinkService) Add(ctx context.Context, link model.Link) error {
@@ -73,4 +92,87 @@ func (s *LinkService) GetLinksByUserID(ctx context.Context, userID string) (*[]m
 	}
 
 	return &links, nil
+}
+
+func (s *LinkService) Update(ctx context.Context, link model.Link) error {
+	return s.Storage.Update(ctx, link)
+}
+
+func (s *LinkService) UpdateBatch(ctx context.Context, db *sql.DB, links []model.Link) error {
+	if db == nil {
+		for _, link := range links {
+			if err := s.Update(ctx, link); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	for _, link := range links {
+		if err = s.Storage.UpdateWithTx(ctx, tx, link); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (s *LinkService) Delete(userID, alias string) {
+	s.taskCh <- deleteTask{UserID: userID, Alias: alias}
+}
+
+func (s *LinkService) FanIn(numWorkers int) {
+	taskCh := s.taskCh
+
+	type workerBucket struct {
+		bucket []model.Link
+	}
+
+	worker := func() {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+
+		wb := workerBucket{
+			bucket: make([]model.Link, 0, batchSize),
+		}
+
+		flush := func() {
+			if len(wb.bucket) == 0 {
+				return
+			}
+			_ = s.UpdateBatch(context.Background(), s.DB, wb.bucket)
+			wb.bucket = wb.bucket[:0]
+		}
+
+		for {
+			select {
+			case task := <-taskCh:
+				link, err := s.GetLinkByAlias(context.Background(), task.Alias)
+				if err != nil || link.UserID != task.UserID {
+					continue
+				}
+
+				link.IsDeleted = true
+				wb.bucket = append(wb.bucket, *link)
+
+				if len(wb.bucket) >= batchSize {
+					flush()
+				}
+
+			case <-ticker.C:
+				flush()
+			}
+		}
+	}
+
+	for i := 0; i < numWorkers; i++ {
+		go worker()
+	}
 }

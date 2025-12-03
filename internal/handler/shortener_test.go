@@ -578,3 +578,71 @@ func TestLinkHandler_HandleBatchAPIShorten(t *testing.T) {
 		})
 	}
 }
+
+func TestLinkHandler_HandleBatchAPIDelete(t *testing.T) {
+	type request struct {
+		method string
+		url    string
+		body   string
+		userID string
+	}
+	type response struct {
+		status      int
+		body        string
+		contentType string
+	}
+	tests := []struct {
+		name     string
+		handler  LinkHandler
+		request  request
+		response response
+	}{
+		{
+			name: "Test delete batch empty body",
+			handler: LinkHandler{
+				LinkService: &service.LinkService{
+					Storage: &memory.Repository{
+						Links: []model.Link{},
+					},
+				},
+				RandomService: &service.RandomService{
+					Randomizer: alphabet.NewAlphabetRandomizer(),
+				},
+				URL: "http://localhost:8080",
+			},
+			request: request{
+				method: http.MethodDelete,
+				url:    "http://localhost:8080/api/user/urls",
+				body:   ``,
+				userID: "u123",
+			},
+			response: response{
+				status:      http.StatusBadRequest,
+				body:        `{"error":"Bad Request"}`,
+				contentType: "application/json; charset=utf-8",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+
+			writer := httptest.NewRecorder()
+			context, _ := gin.CreateTestContext(writer)
+			req := httptest.NewRequest(tt.request.method, tt.request.url, strings.NewReader(tt.request.body))
+			context.Request = req
+
+			context.Set("user_id", tt.request.userID)
+
+			h := tt.handler
+			h.HandleBatchAPIDelete(context)
+
+			assert.Equal(t, tt.response.status, writer.Code)
+			if tt.response.body != "" {
+				assert.Equal(t, tt.response.body, writer.Body.String())
+			}
+			assert.Equal(t, tt.response.contentType, writer.Header().Get("Content-Type"))
+		})
+	}
+}

@@ -380,3 +380,90 @@ func TestRepository_GetByUserID(t *testing.T) {
 		})
 	}
 }
+
+func TestRepository_Update(t *testing.T) {
+	type fields struct {
+		Links []model.Link
+	}
+	type args struct {
+		link model.Link
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Test memory repository update (correct)",
+			fields: fields{
+				Links: []model.Link{
+					{
+						Alias:  "foo",
+						URL:    "bar",
+						UserID: "1",
+					},
+				},
+			},
+			args: args{
+				link: model.Link{
+					Alias:  "foo",
+					URL:    "rab",
+					UserID: "1",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test empty memory repository update (incorrect)",
+			fields: fields{
+				Links: []model.Link{},
+			},
+			args: args{
+				link: model.Link{
+					Alias:  "foo",
+					URL:    "rab",
+					UserID: "1",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Test memory repository update (incorrect: not existing link)",
+			fields: fields{
+				Links: []model.Link{
+					{
+						Alias:  "oof",
+						URL:    "bar",
+						UserID: "1",
+					},
+				},
+			},
+			args: args{
+				link: model.Link{
+					Alias:  "foo",
+					URL:    "rab",
+					UserID: "1",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Repository{
+				Links: tt.fields.Links,
+			}
+			if err := s.Update(t.Context(), tt.args.link); (err != nil) != tt.wantErr {
+				t.Errorf("Update() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				got, _ := s.GetByAlias(t.Context(), tt.args.link.Alias)
+				if !reflect.DeepEqual(got, tt.args.link) {
+					t.Errorf("Update() got = %v, want %v", got, tt.args.link)
+				}
+			}
+		})
+	}
+}

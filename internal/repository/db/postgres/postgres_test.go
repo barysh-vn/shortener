@@ -23,8 +23,8 @@ func TestPostgresRepository_Add(t *testing.T) {
 			name: "Test add to repo (correct)",
 			link: model.Link{Alias: "alias", URL: "https://practicum.yandex.ru/", UserID: "1"},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url, user_id) VALUES ($1, $2, $3)`)).
-					WithArgs("alias", "https://practicum.yandex.ru/", "1").
+				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url, user_id, is_deleted) VALUES ($1, $2, $3, $4)`)).
+					WithArgs("alias", "https://practicum.yandex.ru/", "1", false).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 			wantErr: false,
@@ -33,8 +33,8 @@ func TestPostgresRepository_Add(t *testing.T) {
 			name: "Test add to repo (duplicate)",
 			link: model.Link{Alias: "alias", URL: "https://practicum.yandex.ru/", UserID: "1"},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url, user_id) VALUES ($1, $2, $3)`)).
-					WithArgs("alias", "https://practicum.yandex.ru/", "1").
+				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url, user_id, is_deleted) VALUES ($1, $2, $3, $4)`)).
+					WithArgs("alias", "https://practicum.yandex.ru/", "1", false).
 					WillReturnError(&pgconn.PgError{
 						Code: "23505",
 					})
@@ -81,9 +81,9 @@ func TestPostgresRepository_GetByAlias(t *testing.T) {
 			name:  "Test get by alias (correct)",
 			alias: "alias",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"alias", "url", "user_id"}).
-					AddRow("alias", "https://practicum.yandex.ru/", "1")
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id FROM links WHERE alias = $1`)).
+				rows := sqlmock.NewRows([]string{"alias", "url", "user_id", "is_deleted"}).
+					AddRow("alias", "https://practicum.yandex.ru/", "1", false)
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id, is_deleted FROM links WHERE alias = $1`)).
 					WithArgs("alias").
 					WillReturnRows(rows)
 			},
@@ -94,7 +94,7 @@ func TestPostgresRepository_GetByAlias(t *testing.T) {
 			name:  "Test get by alias (not found)",
 			alias: "alias",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id FROM links WHERE alias = $1`)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id, is_deleted FROM links WHERE alias = $1`)).
 					WithArgs("alias").
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -143,9 +143,9 @@ func TestPostgresRepository_GetByURL(t *testing.T) {
 			name: "Test get by URL (correct)",
 			url:  "https://practicum.yandex.ru/",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"alias", "url", "user_id"}).
-					AddRow("alias", "https://practicum.yandex.ru/", "1")
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id FROM links WHERE url = $1`)).
+				rows := sqlmock.NewRows([]string{"alias", "url", "user_id", "is_deleted"}).
+					AddRow("alias", "https://practicum.yandex.ru/", "1", false)
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id, is_deleted FROM links WHERE url = $1`)).
 					WithArgs("https://practicum.yandex.ru/").
 					WillReturnRows(rows)
 			},
@@ -156,7 +156,7 @@ func TestPostgresRepository_GetByURL(t *testing.T) {
 			name: "Test get by alias (not found)",
 			url:  "https://practicum.yandex.ru/",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id FROM links WHERE url = $1`)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id, is_deleted FROM links WHERE url = $1`)).
 					WithArgs("https://practicum.yandex.ru/").
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -210,8 +210,8 @@ func TestPostgresRepository_AddWithTx(t *testing.T) {
 				return tx
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url, user_id) VALUES ($1, $2, $3)`)).
-					WithArgs("alias", "https://practicum.yandex.ru/", "1").
+				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url, user_id, is_deleted) VALUES ($1, $2, $3, $4)`)).
+					WithArgs("alias", "https://practicum.yandex.ru/", "1", false).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 			wantErr: false,
@@ -225,8 +225,8 @@ func TestPostgresRepository_AddWithTx(t *testing.T) {
 				return tx
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url, user_id) VALUES ($1, $2, $3)`)).
-					WithArgs("alias", "https://practicum.yandex.ru/", "1").
+				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url, user_id, is_deleted) VALUES ($1, $2, $3, $4)`)).
+					WithArgs("alias", "https://practicum.yandex.ru/", "1", false).
 					WillReturnError(&pgconn.PgError{
 						Code: "23505",
 					})
@@ -240,8 +240,8 @@ func TestPostgresRepository_AddWithTx(t *testing.T) {
 				return nil
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url, user_id) VALUES ($1, $2, $3)`)).
-					WithArgs("alias", "https://practicum.yandex.ru/", "1").
+				mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO links (alias, url, user_id, is_deleted) VALUES ($1, $2, $3, $4)`)).
+					WithArgs("alias", "https://practicum.yandex.ru/", "1", false).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 			wantErr: false,
@@ -300,9 +300,9 @@ func TestRepository_GetByUserID(t *testing.T) {
 			name:   "Test get by userID (correct)",
 			userID: "1",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"alias", "url", "user_id"}).
-					AddRow("alias", "https://practicum.yandex.ru/", "1")
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id FROM links WHERE user_id = $1`)).
+				rows := sqlmock.NewRows([]string{"alias", "url", "user_id", "is_deleted"}).
+					AddRow("alias", "https://practicum.yandex.ru/", "1", false)
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id, is_deleted FROM links WHERE user_id = $1`)).
 					WithArgs("1").
 					WillReturnRows(rows)
 			},
@@ -322,8 +322,8 @@ func TestRepository_GetByUserID(t *testing.T) {
 			name:   "Test get by userID (empty)",
 			userID: "1",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"alias", "url", "user_id"})
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id FROM links WHERE user_id = $1`)).
+				rows := sqlmock.NewRows([]string{"alias", "url", "user_id", "is_deleted"})
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT alias, url, user_id, is_deleted FROM links WHERE user_id = $1`)).
 					WithArgs("1").
 					WillReturnRows(rows)
 			},
@@ -351,6 +351,237 @@ func TestRepository_GetByUserID(t *testing.T) {
 			}
 			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetByUserID() got = %v, want %v", got, tt.want)
+			}
+
+			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("expectations error: %v", err)
+			}
+		})
+	}
+}
+
+func TestPostgresRepository_Update(t *testing.T) {
+	tests := []struct {
+		name      string
+		link      model.Link
+		mockSetup func(sqlmock.Sqlmock)
+		wantErr   bool
+	}{
+		{
+			name: "Test add to repo (correct)",
+			link: model.Link{
+				Alias:     "alias",
+				URL:       "https://practicum.ya.ru/",
+				UserID:    "1",
+				IsDeleted: false,
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(
+					`UPDATE links SET url = $2, user_id = $3, is_deleted = $4 WHERE alias = $1`,
+				)).
+					WithArgs("alias", "https://practicum.ya.ru/", "1", false).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+
+				mock.ExpectQuery(regexp.QuoteMeta(
+					`SELECT alias, url, user_id, is_deleted FROM links WHERE alias = $1`,
+				)).
+					WithArgs("alias").
+					WillReturnRows(sqlmock.NewRows(
+						[]string{"alias", "url", "user_id", "is_deleted"},
+					).AddRow(
+						"alias", "https://practicum.ya.ru/", "1", false,
+					))
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test add to repo (duplicate)",
+			link: model.Link{
+				Alias:     "alias",
+				URL:       "https://practicum.yandex.ru/",
+				UserID:    "1",
+				IsDeleted: false,
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(
+					`UPDATE links SET url = $2, user_id = $3, is_deleted = $4 WHERE alias = $1`,
+				)).
+					WithArgs("alias", "https://practicum.yandex.ru/", "1", false).
+					WillReturnError(&pgconn.PgError{Code: "23505"})
+			},
+			wantErr: true,
+		},
+		{
+			name: "Test update repo (not found)",
+			link: model.Link{
+				Alias:     "alias",
+				URL:       "https://practicum.yandex.ru/",
+				UserID:    "1",
+				IsDeleted: false,
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(
+					`UPDATE links SET url = $2, user_id = $3, is_deleted = $4 WHERE alias = $1`,
+				)).
+					WithArgs("alias", "https://practicum.yandex.ru/", "1", false).
+					WillReturnResult(sqlmock.NewResult(0, 0))
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to open sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			repo := NewPostgresRepository(db)
+			if tt.mockSetup != nil {
+				tt.mockSetup(mock)
+			}
+
+			err = repo.Update(context.Background(), tt.link)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Update() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr {
+				got, err := repo.GetByAlias(context.Background(), tt.link.Alias)
+				if err != nil {
+					t.Errorf("GetByAlias returned error: %v", err)
+				}
+				if !reflect.DeepEqual(got, tt.link) {
+					t.Errorf("Update() got = %#v, want %#v", got, tt.link)
+				}
+			}
+
+			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("expectations error: %v", err)
+			}
+		})
+	}
+}
+
+func TestPostgresRepository_UpdateWithTx(t *testing.T) {
+	tests := []struct {
+		name      string
+		link      model.Link
+		txSetup   func(db *sql.DB, mock sqlmock.Sqlmock) any
+		mockSetup func(sqlmock.Sqlmock)
+		wantErr   bool
+	}{
+		{
+			name: "UpdateWithTx: success",
+			link: model.Link{
+				Alias:     "alias",
+				URL:       "https://practicum.ya.ru/",
+				UserID:    "1",
+				IsDeleted: false,
+			},
+			txSetup: func(db *sql.DB, mock sqlmock.Sqlmock) any {
+				mock.ExpectBegin()
+				tx, _ := db.Begin()
+				return tx
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(
+					`UPDATE links SET url = $2, user_id = $3, is_deleted = $4 WHERE alias = $1`,
+				)).
+					WithArgs("alias", "https://practicum.ya.ru/", "1", false).
+					WillReturnResult(sqlmock.NewResult(0, 1)) // 1 row updated
+
+				mock.ExpectQuery(regexp.QuoteMeta(
+					`SELECT alias, url, user_id, is_deleted FROM links WHERE alias = $1`,
+				)).
+					WithArgs("alias").
+					WillReturnRows(sqlmock.NewRows(
+						[]string{"alias", "url", "user_id", "is_deleted"},
+					).AddRow(
+						"alias", "https://practicum.ya.ru/", "1", false,
+					))
+			},
+			wantErr: false,
+		},
+		{
+			name: "UpdateWithTx: duplicate",
+			link: model.Link{
+				Alias:     "alias",
+				URL:       "https://practicum.yandex.ru/",
+				UserID:    "1",
+				IsDeleted: false,
+			},
+			txSetup: func(db *sql.DB, mock sqlmock.Sqlmock) any {
+				return nil
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(
+					`UPDATE links SET url = $2, user_id = $3, is_deleted = $4 WHERE alias = $1`,
+				)).
+					WithArgs("alias", "https://practicum.yandex.ru/", "1", false).
+					WillReturnError(&pgconn.PgError{Code: "23505"})
+			},
+			wantErr: true,
+		},
+		{
+			name: "UpdateWithTx: not found",
+			link: model.Link{
+				Alias:     "alias",
+				URL:       "https://practicum.yandex.ru/",
+				UserID:    "1",
+				IsDeleted: false,
+			},
+			txSetup: func(db *sql.DB, mock sqlmock.Sqlmock) any {
+				return nil
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(regexp.QuoteMeta(
+					`UPDATE links SET url = $2, user_id = $3, is_deleted = $4 WHERE alias = $1`,
+				)).
+					WithArgs("alias", "https://practicum.yandex.ru/", "1", false).
+					WillReturnResult(sqlmock.NewResult(0, 0))
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to open sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			repo := NewPostgresRepository(db)
+
+			var tx any
+			if tt.txSetup != nil {
+				tx = tt.txSetup(db, mock)
+			}
+
+			if tt.mockSetup != nil {
+				tt.mockSetup(mock)
+			}
+
+			err = repo.UpdateWithTx(context.Background(), tx, tt.link)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateWithTx() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr {
+				got, err := repo.GetByAlias(context.Background(), tt.link.Alias)
+				if err != nil {
+					t.Errorf("GetByAlias returned error: %v", err)
+				}
+				if !reflect.DeepEqual(got, tt.link) {
+					t.Errorf("UpdateWithTx() got = %#v, want %#v", got, tt.link)
+				}
 			}
 
 			if err = mock.ExpectationsWereMet(); err != nil {

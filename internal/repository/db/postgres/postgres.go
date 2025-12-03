@@ -23,8 +23,12 @@ func (r *Repository) Add(ctx context.Context, link model.Link) error {
 	if link.URL == "" || link.Alias == "" {
 		return repository.ErrInvalidDataError
 	}
-	query := `INSERT INTO links (alias, url, user_id) VALUES ($1, $2, $3)`
-	_, err := r.db.ExecContext(ctx, query, link.Alias, link.URL, link.UserID)
+
+	query := `
+		INSERT INTO links (alias, url, user_id, is_deleted)
+		VALUES ($1, $2, $3, $4)
+	`
+	_, err := r.db.ExecContext(ctx, query, link.Alias, link.URL, link.UserID, link.IsDeleted)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return fmt.Errorf("url already exists: %w", repository.ErrExistsError)
@@ -48,8 +52,11 @@ func (r *Repository) AddWithTx(ctx context.Context, tx any, link model.Link) err
 		return errors.New("invalid transaction type")
 	}
 
-	query := `INSERT INTO links (alias, url, user_id) VALUES ($1, $2, $3)`
-	_, err := sqlTx.ExecContext(ctx, query, link.Alias, link.URL, link.UserID)
+	query := `
+		INSERT INTO links (alias, url, user_id, is_deleted)
+		VALUES ($1, $2, $3, $4)
+	`
+	_, err := sqlTx.ExecContext(ctx, query, link.Alias, link.URL, link.UserID, link.IsDeleted)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return fmt.Errorf("url already exists: %w", repository.ErrExistsError)
@@ -60,9 +67,14 @@ func (r *Repository) AddWithTx(ctx context.Context, tx any, link model.Link) err
 }
 
 func (r *Repository) GetByAlias(ctx context.Context, alias string) (model.Link, error) {
-	query := `SELECT alias, url, user_id FROM links WHERE alias = $1`
+	query := `SELECT alias, url, user_id, is_deleted FROM links WHERE alias = $1`
 	var link model.Link
-	err := r.db.QueryRowContext(ctx, query, alias).Scan(&link.Alias, &link.URL, &link.UserID)
+	err := r.db.QueryRowContext(ctx, query, alias).Scan(
+		&link.Alias,
+		&link.URL,
+		&link.UserID,
+		&link.IsDeleted,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return model.Link{}, repository.ErrNotFoundError
@@ -73,9 +85,14 @@ func (r *Repository) GetByAlias(ctx context.Context, alias string) (model.Link, 
 }
 
 func (r *Repository) GetByURL(ctx context.Context, url string) (model.Link, error) {
-	query := `SELECT alias, url, user_id FROM links WHERE url = $1`
+	query := `SELECT alias, url, user_id, is_deleted FROM links WHERE url = $1`
 	var link model.Link
-	err := r.db.QueryRowContext(ctx, query, url).Scan(&link.Alias, &link.URL, &link.UserID)
+	err := r.db.QueryRowContext(ctx, query, url).Scan(
+		&link.Alias,
+		&link.URL,
+		&link.UserID,
+		&link.IsDeleted,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return model.Link{}, repository.ErrNotFoundError
@@ -90,7 +107,7 @@ func (r *Repository) GetByUserID(ctx context.Context, userID string) ([]model.Li
 		return nil, repository.ErrInvalidDataError
 	}
 
-	query := `SELECT alias, url, user_id FROM links WHERE user_id = $1`
+	query := `SELECT alias, url, user_id, is_deleted FROM links WHERE user_id = $1`
 
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
@@ -99,10 +116,14 @@ func (r *Repository) GetByUserID(ctx context.Context, userID string) ([]model.Li
 	defer rows.Close()
 
 	links := []model.Link{}
-
 	for rows.Next() {
 		var link model.Link
-		if err = rows.Scan(&link.Alias, &link.URL, &link.UserID); err != nil {
+		if err = rows.Scan(
+			&link.Alias,
+			&link.URL,
+			&link.UserID,
+			&link.IsDeleted,
+		); err != nil {
 			return nil, err
 		}
 		links = append(links, link)
@@ -113,6 +134,77 @@ func (r *Repository) GetByUserID(ctx context.Context, userID string) ([]model.Li
 	}
 
 	return links, nil
+}
+
+func (r *Repository) Update(ctx context.Context, link model.Link) error {
+	if link.Alias == "" {
+		return repository.ErrInvalidDataError
+	}
+
+	query := `
+		UPDATE links
+		SET url = $2, user_id = $3, is_deleted = $4
+		WHERE alias = $1
+	`
+	res, err := r.db.ExecContext(ctx, query,
+		link.Alias,
+		link.URL,
+		link.UserID,
+		link.IsDeleted,
+	)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return repository.ErrNotFoundError
+	}
+
+	return nil
+}
+
+func (r *Repository) UpdateWithTx(ctx context.Context, tx any, link model.Link) error {
+	if link.Alias == "" {
+		return repository.ErrInvalidDataError
+	}
+
+	if tx == nil {
+		return r.Update(ctx, link)
+	}
+
+	sqlTx, ok := tx.(*sql.Tx)
+	if !ok {
+		return errors.New("invalid transaction type")
+	}
+
+	query := `
+		UPDATE links
+		SET url = $2, user_id = $3, is_deleted = $4
+		WHERE alias = $1
+	`
+	res, err := sqlTx.ExecContext(ctx, query,
+		link.Alias,
+		link.URL,
+		link.UserID,
+		link.IsDeleted,
+	)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return repository.ErrNotFoundError
+	}
+
+	return nil
 }
 
 func isUniqueViolation(err error) bool {

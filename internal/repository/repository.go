@@ -19,4 +19,6 @@ type LinkRepository interface {
 	GetByAlias(ctx context.Context, alias string) (model.Link, error)
 	GetByURL(ctx context.Context, url string) (model.Link, error)
 	GetByUserID(ctx context.Context, userID string) ([]model.Link, error)
+	Update(ctx context.Context, link model.Link) error
+	UpdateWithTx(ctx context.Context, tx any, link model.Link) error
 }
