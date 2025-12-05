@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/barysh-vn/shortener/internal/service"
@@ -46,7 +47,12 @@ func AuthJWTMiddleware(tokenService *service.TokenService, cookieName string) gi
 
 		if !valid {
 			userID = uuid.New().String()
-			newToken, _ := tokenService.CreateToken(userID)
+			newToken, err := tokenService.CreateToken(userID)
+			if err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"status": http.StatusText(http.StatusUnauthorized)})
+				c.Abort()
+				return
+			}
 
 			c.SetCookie(
 				cookieName,

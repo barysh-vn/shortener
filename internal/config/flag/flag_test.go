@@ -17,6 +17,7 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 		wantBase        string
 		wantFile        string
 		wantDataBaseDSN string
+		wantSecret      string
 		wantErr         bool
 	}{
 		{
@@ -30,11 +31,12 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 		{
 			name:            "Test flag loader correct (custom values)",
 			initAddr:        &model.ShortenerAddress{Host: "localhost", Port: 8080},
-			args:            []string{"-a", "localhost:9090", "-b", "http://localhost:8181", "-f", "db_custom.json", "-d", fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`)},
+			args:            []string{"-a", "localhost:9090", "-b", "http://localhost:8181", "-f", "db_custom.json", "-d", fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`), "-s", "secret"},
 			wantAddr:        "localhost:9090",
 			wantBase:        "http://localhost:8181",
 			wantFile:        "db_custom.json",
 			wantDataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
+			wantSecret:      "secret",
 			wantErr:         false,
 		},
 		{
@@ -102,6 +104,9 @@ func TestLoader_Declare_And_Parse(t *testing.T) {
 			}
 			if got := cfg.DataBaseDSN; got != tt.wantDataBaseDSN {
 				t.Errorf("DataBaseDSN = %q, want %q", got, tt.wantDataBaseDSN)
+			}
+			if got := cfg.Secret; got != tt.wantSecret {
+				t.Errorf("Secret = %q, want %q", got, tt.wantDataBaseDSN)
 			}
 		})
 	}

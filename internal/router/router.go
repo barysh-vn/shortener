@@ -17,7 +17,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *gin.Engine {
+func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) (*gin.Engine, *service.LinkService) {
 	r := gin.Default()
 	var repo repository.LinkRepository
 	repo = memory.NewMemoryRepository()
@@ -26,16 +26,16 @@ func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *g
 	} else if config.FilePath != "" {
 		repo = file.NewFileRepository(config.FilePath)
 	}
+	linkService := service.NewLinkService(repo, db)
 	linkHandler := handler.LinkHandler{
-		LinkService:   service.NewLinkService(repo, db),
+		LinkService:   linkService,
 		RandomService: service.NewRandomService(alphabet.NewAlphabetRandomizer()),
 		URL:           config.BaseURL,
 		DB:            db,
 		Logger:        logger,
 	}
 
-	secret := "SUPER_SECRET_32_CHARS"
-	tokenService := service.NewTokenService(secret, 365*24*time.Hour)
+	tokenService := service.NewTokenService(config.Secret, 365*24*time.Hour)
 
 	r.Use(middleware.AuthJWTMiddleware(tokenService, "jwt"))
 
@@ -52,5 +52,5 @@ func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *g
 	apiGroup.GET("/user/urls", linkHandler.HandleUserURLs)
 	apiGroup.DELETE("/user/urls", linkHandler.HandleBatchAPIDelete)
 
-	return r
+	return r, linkService
 }

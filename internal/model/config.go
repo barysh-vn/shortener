@@ -5,4 +5,5 @@ type ShortenerConfig struct {
 	BaseURL     string
 	FilePath    string
 	DataBaseDSN string
+	Secret      string
 }

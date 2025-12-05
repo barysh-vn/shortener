@@ -1,8 +1,15 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"errors"
 	goflag "flag"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/barysh-vn/shortener/internal/config"
 	"github.com/barysh-vn/shortener/internal/config/flag"
@@ -40,9 +47,31 @@ func main() {
 		defer db.Close()
 	}
 
-	r := router.NewRouter(shortenerConfig, zapLogger, db)
-	err = r.Run(shortenerConfig.Address.String())
-	if err != nil {
-		zap.L().Fatal("run time error", zap.Error(err))
+	r, linkService := router.NewRouter(shortenerConfig, zapLogger, db)
+
+	srv := &http.Server{
+		Addr:    shortenerConfig.Address.String(),
+		Handler: r,
 	}
+
+	go func() {
+		if err = srv.ListenAndServe(); err != nil && !errors.Is(http.ErrServerClosed, err) {
+			zapLogger.Fatal("server error", zap.Error(err))
+		}
+	}()
+	zapLogger.Info("Server started on " + shortenerConfig.Address.String())
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	zapLogger.Info("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err = srv.Shutdown(ctx); err != nil {
+		zapLogger.Fatal("server forced to shutdown", zap.Error(err))
+	}
+
+	linkService.Stop()
+	zapLogger.Info("LinkService stopped, all workers finished")
 }

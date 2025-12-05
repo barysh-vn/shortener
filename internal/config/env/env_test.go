@@ -16,6 +16,7 @@ func TestLoader_Load(t *testing.T) {
 		baseURL     string
 		filePath    string
 		dataBaseDSN string
+		secret      string
 	}
 	tests := []struct {
 		name    string
@@ -33,11 +34,13 @@ func TestLoader_Load(t *testing.T) {
 					BaseURL:     "http://localhost:8080",
 					FilePath:    "db.json",
 					DataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
+					Secret:      "secret",
 				},
 				address:     "localhost:8080",
 				baseURL:     "http://localhost:8080",
 				filePath:    "db.json",
 				dataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
+				secret:      "secret",
 			},
 			wantErr: false,
 		},
@@ -68,6 +71,7 @@ func TestLoader_Load(t *testing.T) {
 			os.Setenv("BASE_URL", tt.args.baseURL)
 			os.Setenv("FILE_STORAGE_PATH", tt.args.filePath)
 			os.Setenv("DATABASE_DSN", tt.args.dataBaseDSN)
+			os.Setenv("SECRET", tt.args.secret)
 			if err := l.Load(config); (err != nil) != tt.wantErr {
 				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)
 				return

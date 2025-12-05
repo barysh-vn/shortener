@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"sync"
 	"time"
 
 	"github.com/barysh-vn/shortener/internal/model"
@@ -23,16 +24,23 @@ type LinkService struct {
 	Storage repository.LinkRepository
 	DB      *sql.DB
 	taskCh  chan deleteTask
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
 }
 
 func NewLinkService(storage repository.LinkRepository, db *sql.DB) *LinkService {
+	ctx, cancel := context.WithCancel(context.Background())
+
 	s := &LinkService{
 		Storage: storage,
 		DB:      db,
 		taskCh:  make(chan deleteTask, 1000),
+		ctx:     ctx,
+		cancel:  cancel,
 	}
 
-	go s.FanIn(workersCount)
+	s.FanIn(workersCount)
 
 	return s
 }
@@ -124,8 +132,17 @@ func (s *LinkService) UpdateBatch(ctx context.Context, db *sql.DB, links []model
 	return tx.Commit()
 }
 
+func (s *LinkService) Stop() {
+	s.cancel()
+	close(s.taskCh)
+	s.wg.Wait()
+}
+
 func (s *LinkService) Delete(userID, alias string) {
-	s.taskCh <- deleteTask{UserID: userID, Alias: alias}
+	select {
+	case s.taskCh <- deleteTask{UserID: userID, Alias: alias}:
+	case <-s.ctx.Done():
+	}
 }
 
 func (s *LinkService) FanIn(numWorkers int) {
@@ -136,6 +153,8 @@ func (s *LinkService) FanIn(numWorkers int) {
 	}
 
 	worker := func() {
+		defer s.wg.Done()
+
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 
@@ -153,7 +172,15 @@ func (s *LinkService) FanIn(numWorkers int) {
 
 		for {
 			select {
-			case task := <-taskCh:
+			case <-s.ctx.Done():
+				flush()
+				return
+			case task, ok := <-taskCh:
+				if !ok {
+					flush()
+					return
+				}
+
 				link, err := s.GetLinkByAlias(context.Background(), task.Alias)
 				if err != nil || link.UserID != task.UserID {
 					continue
@@ -165,13 +192,13 @@ func (s *LinkService) FanIn(numWorkers int) {
 				if len(wb.bucket) >= batchSize {
 					flush()
 				}
-
 			case <-ticker.C:
 				flush()
 			}
 		}
 	}
 
+	s.wg.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
 		go worker()
 	}
