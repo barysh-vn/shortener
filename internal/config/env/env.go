@@ -28,5 +28,9 @@ func (l *Loader) Load(config *model.ShortenerConfig) error {
 		config.DataBaseDSN = dataBaseDSN
 	}
 
+	if secret, ok := os.LookupEnv("SECRET"); ok {
+		config.Secret = secret
+	}
+
 	return nil
 }

@@ -15,6 +15,7 @@ func TestGetShortenerConfig(t *testing.T) {
 		BaseURL     string
 		FilePath    string
 		DataBaseDSN string
+		Secret      string
 	}
 
 	tests := []struct {
@@ -30,6 +31,7 @@ func TestGetShortenerConfig(t *testing.T) {
 					Port: 8080,
 				},
 				BaseURL: "http://localhost:8080",
+				Secret:  "SUPER_SECRET_32_CHARS",
 			},
 			env: envArgs{},
 		},
@@ -43,12 +45,14 @@ func TestGetShortenerConfig(t *testing.T) {
 				BaseURL:     "http://localhost:8282",
 				FilePath:    "./flag_file.json",
 				DataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
+				Secret:      "secret",
 			},
 			env: envArgs{
 				ServerAddr:  "localhost:8181",
 				BaseURL:     "http://localhost:8282",
 				FilePath:    "./flag_file.json",
 				DataBaseDSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", `localhost`, `postgres`, `postgres`, `my_db`),
+				Secret:      "secret",
 			},
 		},
 	}
@@ -65,6 +69,9 @@ func TestGetShortenerConfig(t *testing.T) {
 			}
 			if tt.env.DataBaseDSN != "" {
 				t.Setenv("DATABASE_DSN", tt.env.DataBaseDSN)
+			}
+			if tt.env.Secret != "" {
+				t.Setenv("SECRET", tt.env.Secret)
 			}
 			fs := flag.NewFlagSet("test", flag.ContinueOnError)
 

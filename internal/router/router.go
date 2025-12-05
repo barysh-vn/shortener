@@ -2,6 +2,7 @@ package router
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/barysh-vn/shortener/internal/handler"
 	"github.com/barysh-vn/shortener/internal/middleware"
@@ -16,7 +17,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *gin.Engine {
+func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) (*gin.Engine, *service.LinkService) {
 	r := gin.Default()
 	var repo repository.LinkRepository
 	repo = memory.NewMemoryRepository()
@@ -25,13 +26,18 @@ func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *g
 	} else if config.FilePath != "" {
 		repo = file.NewFileRepository(config.FilePath)
 	}
+	linkService := service.NewLinkService(repo, db)
 	linkHandler := handler.LinkHandler{
-		LinkService:   service.NewLinkService(repo),
+		LinkService:   linkService,
 		RandomService: service.NewRandomService(alphabet.NewAlphabetRandomizer()),
 		URL:           config.BaseURL,
 		DB:            db,
 		Logger:        logger,
 	}
+
+	tokenService := service.NewTokenService(config.Secret, 365*24*time.Hour)
+
+	r.Use(middleware.AuthJWTMiddleware(tokenService, "jwt"))
 
 	r.Use(middleware.RequestLoggerMiddleware(logger))
 	r.Use(middleware.GzipMiddleware(logger))
@@ -43,6 +49,8 @@ func NewRouter(config *model.ShortenerConfig, logger *zap.Logger, db *sql.DB) *g
 	apiGroup := r.Group("/api")
 	apiGroup.POST("/shorten", linkHandler.HandleAPIShorten)
 	apiGroup.POST("/shorten/batch", linkHandler.HandleBatchAPIShorten)
+	apiGroup.GET("/user/urls", linkHandler.HandleUserURLs)
+	apiGroup.DELETE("/user/urls", linkHandler.HandleBatchAPIDelete)
 
-	return r
+	return r, linkService
 }

@@ -39,6 +39,11 @@ func (h *LinkHandler) HandleGet(c *gin.Context) {
 		return
 	}
 
+	if link.IsDeleted {
+		c.JSON(http.StatusGone, gin.H{"error": http.StatusText(http.StatusGone)})
+		return
+	}
+
 	c.Redirect(http.StatusTemporaryRedirect, link.URL)
 }
 
@@ -113,8 +118,9 @@ func (h *LinkHandler) HandleBatchAPIShorten(c *gin.Context) {
 		if err != nil {
 			if errors.Is(err, repository.ErrNotFoundError) {
 				link = &model.Link{
-					URL:   req.URL,
-					Alias: h.RandomService.GetRandomString(8),
+					URL:    req.URL,
+					Alias:  h.RandomService.GetRandomString(8),
+					UserID: c.GetString("user_id"),
 				}
 			} else {
 				h.Logger.Info("Failed to get link", zap.String("url", req.URL), zap.Error(err))
@@ -127,7 +133,7 @@ func (h *LinkHandler) HandleBatchAPIShorten(c *gin.Context) {
 
 	var newLinks []model.Link
 	for _, link := range links {
-		if _, err := h.LinkService.GetLinkByAlias(c, link.Alias); errors.Is(err, repository.ErrNotFoundError) {
+		if _, err = h.LinkService.GetLinkByAlias(c, link.Alias); errors.Is(err, repository.ErrNotFoundError) {
 			newLinks = append(newLinks, link)
 		}
 	}
@@ -168,6 +174,56 @@ func (h *LinkHandler) HandlePingDB(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
+func (h *LinkHandler) HandleUserURLs(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": http.StatusText(http.StatusUnauthorized)})
+		return
+	}
+
+	links, err := h.LinkService.GetLinksByUserID(c, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": http.StatusText(http.StatusInternalServerError)})
+		return
+	}
+
+	if len(*links) == 0 {
+		c.JSON(http.StatusNoContent, gin.H{"error": http.StatusText(http.StatusNoContent)})
+		return
+	}
+
+	var response []api.ShortenUserURLsResponse
+	for _, req := range *links {
+		response = append(response, api.ShortenUserURLsResponse{
+			Alias: h.getURL(&req),
+			URL:   req.URL,
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *LinkHandler) HandleBatchAPIDelete(c *gin.Context) {
+	body, err := h.getBody(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": http.StatusText(http.StatusBadRequest)})
+		return
+	}
+
+	var aliases []string
+	if err = json.Unmarshal(body, &aliases); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": http.StatusText(http.StatusBadRequest)})
+		return
+	}
+
+	userID := c.GetString("user_id")
+	for _, alias := range aliases {
+		h.LinkService.Delete(userID, alias)
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"status": http.StatusText(http.StatusAccepted)})
+}
+
 func (h *LinkHandler) getBody(c *gin.Context) ([]byte, error) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil || len(body) == 0 {
@@ -177,12 +233,12 @@ func (h *LinkHandler) getBody(c *gin.Context) ([]byte, error) {
 	return body, nil
 }
 
-func (h *LinkHandler) getLink(ctx context.Context, url string) (*model.Link, error) {
-	link, err := h.LinkService.GetLinkByURL(ctx, url)
+func (h *LinkHandler) getLink(c *gin.Context, url string) (*model.Link, error) {
+	link, err := h.LinkService.GetLinkByURL(c, url)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFoundError) {
-			link = &model.Link{URL: url, Alias: h.RandomService.GetRandomString(8)}
-			err = h.LinkService.Add(ctx, *link)
+			link = &model.Link{URL: url, Alias: h.RandomService.GetRandomString(8), UserID: c.GetString("user_id")}
+			err = h.LinkService.Add(c, *link)
 			if err != nil && !errors.Is(err, repository.ErrExistsError) {
 				return link, err
 			}

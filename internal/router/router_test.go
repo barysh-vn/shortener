@@ -36,7 +36,7 @@ func TestNewRouter(t *testing.T) {
 			db, _ := sql.Open("pgx", config.DataBaseDSN)
 			defer db.Close()
 			zapLogger, _ := logger.GetLogger("INFO")
-			if got := NewRouter(config, zapLogger, db); reflect.TypeOf(got) != reflect.TypeOf(tt.want) {
+			if got, _ := NewRouter(config, zapLogger, db); reflect.TypeOf(got) != reflect.TypeOf(tt.want) {
 				t.Errorf("Type of NewRouter() = %v, want %v", reflect.TypeOf(got), reflect.TypeOf(tt.want))
 			}
 		})

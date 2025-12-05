@@ -12,6 +12,7 @@ var (
 			Port: 8080,
 		},
 		BaseURL: "http://localhost:8080",
+		Secret:  "SUPER_SECRET_32_CHARS",
 	}
 )
 

@@ -24,4 +24,5 @@ func (l *Loader) Declare(config *model.ShortenerConfig) {
 	flag.StringVar(&config.BaseURL, "b", "http://"+config.Address.String(), "Shortener result BaseURL")
 	flag.StringVar(&config.FilePath, "f", "", "Shortener data base file path")
 	flag.StringVar(&config.DataBaseDSN, "d", "", "Shortener data base DSN")
+	flag.StringVar(&config.Secret, "s", "", "Shortener secret")
 }

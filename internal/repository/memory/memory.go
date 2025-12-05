@@ -8,16 +8,16 @@ import (
 )
 
 type Repository struct {
-	Values map[string]string
+	Links []model.Link
 }
 
 func NewMemoryRepository() *Repository {
 	return &Repository{
-		Values: make(map[string]string),
+		Links: []model.Link{},
 	}
 }
 
-func (s Repository) Add(_ context.Context, link model.Link) error {
+func (s *Repository) Add(_ context.Context, link model.Link) error {
 	if len(link.URL) == 0 {
 		return repository.ErrInvalidDataError
 	}
@@ -26,34 +26,70 @@ func (s Repository) Add(_ context.Context, link model.Link) error {
 		return repository.ErrInvalidDataError
 	}
 
-	_, ok := s.Values[link.Alias]
-	if ok {
-		return repository.ErrExistsError
+	for _, l := range s.Links {
+		if l.URL == link.URL || l.Alias == link.Alias {
+			return repository.ErrExistsError
+		}
 	}
 
-	s.Values[link.Alias] = link.URL
+	s.Links = append(s.Links, link)
 	return nil
 }
 
-func (s Repository) AddWithTx(ctx context.Context, _ any, link model.Link) error {
+func (s *Repository) AddWithTx(ctx context.Context, _ any, link model.Link) error {
 	return s.Add(ctx, link)
 }
 
-func (s Repository) GetByAlias(_ context.Context, alias string) (model.Link, error) {
-	v, ok := s.Values[alias]
-	if !ok {
-		return model.Link{}, repository.ErrNotFoundError
-	}
-
-	return model.Link{URL: v, Alias: alias}, nil
-}
-
-func (s Repository) GetByURL(_ context.Context, url string) (model.Link, error) {
-	for k, v := range s.Values {
-		if v == url {
-			return model.Link{URL: url, Alias: k}, nil
+func (s *Repository) GetByAlias(_ context.Context, alias string) (model.Link, error) {
+	for _, l := range s.Links {
+		if l.Alias == alias {
+			return l, nil
 		}
 	}
 
 	return model.Link{}, repository.ErrNotFoundError
+}
+
+func (s *Repository) GetByURL(_ context.Context, url string) (model.Link, error) {
+	for _, l := range s.Links {
+		if l.URL == url {
+			return l, nil
+		}
+	}
+
+	return model.Link{}, repository.ErrNotFoundError
+}
+
+func (s *Repository) GetByUserID(_ context.Context, userID string) ([]model.Link, error) {
+	if len(userID) == 0 {
+		return nil, repository.ErrInvalidDataError
+	}
+
+	result := []model.Link{}
+	for _, l := range s.Links {
+		if l.UserID == userID {
+			result = append(result, l)
+		}
+	}
+
+	return result, nil
+}
+
+func (s *Repository) Update(_ context.Context, link model.Link) error {
+	if link.Alias == "" {
+		return repository.ErrInvalidDataError
+	}
+
+	for i, l := range s.Links {
+		if l.Alias == link.Alias {
+			s.Links[i] = link
+			return nil
+		}
+	}
+
+	return repository.ErrNotFoundError
+}
+
+func (s *Repository) UpdateWithTx(ctx context.Context, _ any, link model.Link) error {
+	return s.Update(ctx, link)
 }
