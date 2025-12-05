@@ -55,7 +55,7 @@ func main() {
 	}
 
 	go func() {
-		if err = srv.ListenAndServe(); err != nil && !errors.Is(http.ErrServerClosed, err) {
+		if err = srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			zapLogger.Fatal("server error", zap.Error(err))
 		}
 	}()
